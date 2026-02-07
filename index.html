@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>梦幻热气球飞行</title>
     <!-- 引入现代字体 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,11 +16,19 @@
             min-height: 100vh;
             background: linear-gradient(180deg, #1e3c72 0%, #2a5298 40%, #7fa3d1 100%);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;  /* 防止滚动 */
         }
         #game-container {
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             border-radius: 8px;
             overflow: hidden;
+            max-width: 100%;   /* 响应式：不超过屏幕宽度 */
+            max-height: 100vh; /* 响应式：不超过屏幕高度 */
+        }
+        #game-container canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 100vh;
         }
     </style>
 </head>
@@ -68,6 +76,12 @@
             height: 600,                    // 游戏画布高度
             parent: 'game-container',       // 将游戏挂载到这个DOM元素
             backgroundColor: '#87CEEB',     // 背景颜色 (天蓝色)
+            scale: {
+                mode: Phaser.Scale.FIT,     // 自适应缩放模式：保持宽高比并填充屏幕
+                autoCenter: Phaser.Scale.CENTER_BOTH,  // 居中显示
+                width: 800,
+                height: 600
+            },
             scene: {
                 create: create,             // 创建场景时调用
                 update: update              // 每帧更新时调用
