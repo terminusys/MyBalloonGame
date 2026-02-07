@@ -30,9 +30,121 @@
             max-width: 100%;
             max-height: 100vh;
         }
+        
+        /* 名字输入弹窗样式 */
+        #name-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        #name-modal.hidden {
+            display: none;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-content h2 {
+            color: #fff;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .modal-content p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0 0 25px 0;
+            font-size: 16px;
+        }
+        #player-name-input {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: center;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.3s;
+        }
+        #player-name-input:focus {
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+        #player-name-input::placeholder {
+            color: #999;
+            font-weight: 400;
+        }
+        #start-game-btn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        #start-game-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
+        }
+        #start-game-btn:active {
+            transform: translateY(0);
+        }
+        .emoji-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
+    <!-- 名字输入弹窗 -->
+    <div id="name-modal">
+        <div class="modal-content">
+            <div class="emoji-icon">🎈</div>
+            <h2>欢迎来到热气球世界</h2>
+            <p>请输入你的名字开始游戏</p>
+            <input 
+                type="text" 
+                id="player-name-input" 
+                placeholder="例如：张三、李四..." 
+                maxlength="10"
+                autocomplete="off"
+            />
+            <button id="start-game-btn">🚀 开始飞行</button>
+        </div>
+    </div>
+
     <!-- 游戏容器 -->
     <div id="game-container"></div>
 
@@ -43,6 +155,49 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
+        // ==================== 玩家名字管理 ====================
+        let playerName = '';
+        let gameStarted = false;
+        
+        // 从 localStorage 读取保存的名字
+        const savedName = localStorage.getItem('balloonPlayerName');
+        if (savedName) {
+            playerName = savedName;
+            document.getElementById('name-modal').classList.add('hidden');
+            gameStarted = true;
+        }
+        
+        // 处理开始游戏按钮
+        document.getElementById('start-game-btn').addEventListener('click', startGame);
+        
+        // 处理回车键
+        document.getElementById('player-name-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startGame();
+            }
+        });
+        
+        function startGame() {
+            const input = document.getElementById('player-name-input').value.trim();
+            
+            if (!input) {
+                alert('请输入你的名字！');
+                return;
+            }
+            
+            if (input.length < 2) {
+                alert('名字至少需要2个字符！');
+                return;
+            }
+            
+            playerName = input;
+            localStorage.setItem('balloonPlayerName', playerName);
+            document.getElementById('name-modal').classList.add('hidden');
+            gameStarted = true;
+            
+            console.log('🎈 欢迎玩家:', playerName);
+        }
+        
         // ==================== Supabase 配置 ====================
         const SUPABASE_URL = 'https://ksctfambipodjbrtjaby.supabase.co';
         // ⚠️ 注意：请将下面的 anon key 替换为你的真实 Supabase anon key
@@ -50,11 +205,11 @@
         // 你可以在 Supabase Dashboard > Settings > API 中找到
                 const SUPABASE_ANON_KEY = 'sb_publishable_8MsjbT3RenOKGNyMafKv-Q_b8MNN7Qn';
 
-        // 生成当前玩家的唯一ID和名字
+        // 生成当前玩家的唯一ID
         const playerId = 'player_' + Math.random().toString(36).substr(2, 9);
-        const playerName = '飞行员 ' + Math.floor(Math.random() * 900 + 100);
         
-        console.log('🎈 当前玩家:', playerName, '| ID:', playerId);
+        // 玩家名字将在用户输入后设置
+        console.log('🎈 玩家 ID:', playerId);
         
         // 创建 Supabase 客户端（延迟初始化，避免重复声明）
         let supabaseClient = null;
@@ -245,6 +400,22 @@
 
         // ==================== 创建场景函数 ====================
         function create() {
+            // 如果游戏还未开始（用户未输入名字），等待
+            if (!gameStarted) {
+                const checkInterval = setInterval(() => {
+                    if (gameStarted) {
+                        clearInterval(checkInterval);
+                        initializeGame.call(this);
+                    }
+                }, 100);
+                return;
+            }
+            
+            initializeGame.call(this);
+        }
+        
+        // ==================== 初始化游戏函数 ====================
+        function initializeGame() {
             // 获取当前场景对象
             const scene = this;
 
@@ -443,7 +614,7 @@
             
             // 发送初始位置
             sendPositionUpdate(balloon.x, balloon.y);
-        }
+        }  // initializeGame 函数结束
         
         // ==================== Supabase 实时同步函数 ====================
         
