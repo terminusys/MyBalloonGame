@@ -468,22 +468,28 @@
 
         // ==================== 创建场景函数 ====================
         function create() {
+            // 获取当前场景对象
+            const scene = this;
+            
             // 如果游戏还未开始（用户未输入名字），等待
             if (!gameStarted) {
                 const checkInterval = setInterval(() => {
                     if (gameStarted) {
                         clearInterval(checkInterval);
-                        initializeGame.call(this);
+                        initializeGame.call(scene);
                     }
                 }, 100);
                 return;
             }
             
-            initializeGame.call(this);
+            // 如果已经有名字，直接初始化
+            initializeGame.call(scene);
         }
         
         // ==================== 初始化游戏函数 ====================
         function initializeGame() {
+            // 获取当前场景对象
+            const scene = this;
             // 获取当前场景对象
             const scene = this;
 
@@ -812,10 +818,16 @@
             if (!supabaseClient) return;
             
             try {
+                // 只加载最近2分钟内活跃的玩家
+                const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+                
                 const { data, error } = await supabaseClient
                     .from('balloon_positions')
                     .select('*')
-                    .neq('player_id', playerId);
+                    .neq('player_id', playerId)
+                    .gte('updated_at', twoMinutesAgo)  // 只加载2分钟内更新的玩家
+                    .order('updated_at', { ascending: false })
+                    .limit(10);  // 最多显示10个其他玩家
                 
                 if (error) {
                     console.error('❌ 加载现有玩家失败:', error.message);
@@ -823,7 +835,7 @@
                 }
                 
                 if (data && data.length > 0) {
-                    console.log('👥 加载现有玩家:', data.length, '人');
+                    console.log('👥 加载活跃玩家:', data.length, '人');
                     data.forEach(player => {
                         if (!otherPlayers[player.player_id]) {
                             otherPlayers[player.player_id] = createOtherPlayerBalloon(scene, {
@@ -834,7 +846,12 @@
                             otherPlayers[player.player_id].lastUpdate = Date.now();
                         }
                     });
+                } else {
+                    console.log('👥 当前没有其他活跃玩家');
                 }
+                
+                // 清理数据库中超过5分钟的旧数据
+                cleanupOldDataInDatabase();
             } catch (err) {
                 console.error('❌ 加载现有玩家异常:', err);
             }
@@ -851,6 +868,29 @@
                     otherPlayers[playerId].container.destroy();
                     delete otherPlayers[playerId];
                 }
+            }
+        }
+        
+        // 清理数据库中的旧数据
+        async function cleanupOldDataInDatabase() {
+            if (!supabaseClient) return;
+            
+            try {
+                // 删除5分钟前的旧数据
+                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+                
+                const { error } = await supabaseClient
+                    .from('balloon_positions')
+                    .delete()
+                    .lt('updated_at', fiveMinutesAgo);
+                
+                if (error) {
+                    console.error('❌ 清理旧数据失败:', error.message);
+                } else {
+                    console.log('🧹 已清理5分钟前的旧数据');
+                }
+            } catch (err) {
+                console.error('❌ 清理旧数据异常:', err);
             }
         }
 
