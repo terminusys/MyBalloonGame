@@ -203,6 +203,7 @@
         let playerName = '';
         let gameStarted = false;
         let playerNameTextObject = null;  // 保存玩家名字文本对象的引用
+        let gameScene = null;  // 保存游戏场景对象
         
         // 从 localStorage 读取保存的名字
         const savedName = localStorage.getItem('balloonPlayerName');
@@ -260,9 +261,15 @@
                 sendPositionUpdate(balloon.x, balloon.y);
             }
             
+            // 如果是首次启动游戏
             if (!gameStarted) {
                 gameStarted = true;
                 console.log('🎈 欢迎玩家:', playerName);
+                
+                // 如果游戏场景已经在等待，立即初始化
+                if (gameScene) {
+                    initializeGame.call(gameScene);
+                }
             }
         }
         
@@ -468,22 +475,19 @@
 
         // ==================== 创建场景函数 ====================
         function create() {
-            // 获取当前场景对象
-            const scene = this;
+            // 保存场景对象引用
+            gameScene = this;
             
             // 如果游戏还未开始（用户未输入名字），等待
             if (!gameStarted) {
-                const checkInterval = setInterval(() => {
-                    if (gameStarted) {
-                        clearInterval(checkInterval);
-                        initializeGame.call(scene);
-                    }
-                }, 100);
+                console.log('⏳ 等待玩家输入名字...');
+                // 不需要轮询，startGame 函数会在名字输入后调用 initializeGame
                 return;
             }
             
             // 如果已经有名字，直接初始化
-            initializeGame.call(scene);
+            console.log('🚀 开始初始化游戏...');
+            initializeGame.call(this);
         }
         
         // ==================== 初始化游戏函数 ====================
