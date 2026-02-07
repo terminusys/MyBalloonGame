@@ -129,9 +129,9 @@
         /* 更改名字按钮样式 */
         #change-name-btn {
             position: fixed;
-            top: 20px;
-            left: 20px;
-            padding: 12px 20px;
+            top: 15px;
+            left: 15px;
+            padding: 10px 18px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -142,10 +142,12 @@
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
             transition: all 0.3s;
             z-index: 999;
-            display: none;
+            opacity: 1;
+            pointer-events: auto;
         }
-        #change-name-btn.show {
-            display: block;
+        #change-name-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
         #change-name-btn:hover {
             transform: translateY(-2px);
@@ -153,6 +155,16 @@
         }
         #change-name-btn:active {
             transform: translateY(0);
+        }
+        
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            #change-name-btn {
+                font-size: 12px;
+                padding: 8px 15px;
+                top: 10px;
+                left: 10px;
+            }
         }
     </style>
 </head>
@@ -197,8 +209,10 @@
         if (savedName) {
             playerName = savedName;
             document.getElementById('name-modal').classList.add('hidden');
-            document.getElementById('change-name-btn').classList.add('show');
+            document.getElementById('change-name-btn').classList.remove('hidden');
             gameStarted = true;
+        } else {
+            document.getElementById('change-name-btn').classList.add('hidden');
         }
         
         // 处理开始游戏按钮
@@ -236,7 +250,7 @@
             playerName = input;
             localStorage.setItem('balloonPlayerName', playerName);
             document.getElementById('name-modal').classList.add('hidden');
-            document.getElementById('change-name-btn').classList.add('show');
+            document.getElementById('change-name-btn').classList.remove('hidden');
             
             // 如果是更改名字，更新显示
             if (isNameChanged && playerNameTextObject) {
@@ -645,15 +659,21 @@
                 ease: 'Sine.easeInOut'
             });
 
-            // ---------- 添加操作提示文字（优化版，完全居中）----------
+            // ---------- 添加操作提示文字（优化版，完全居中，响应式）----------
             const hintBg = scene.add.graphics();
             hintBg.fillStyle(0x000000, 0.5);
-            hintBg.fillRoundedRect(config.width / 2 - 180, config.height - 50, 360, 38, 10);
+            // 使用游戏画布的中心点，确保在所有设备上都居中
+            const hintWidth = 360;
+            const hintHeight = 38;
+            const hintX = config.width / 2 - hintWidth / 2;
+            const hintY = config.height - 50;
+            hintBg.fillRoundedRect(hintX, hintY, hintWidth, hintHeight, 10);
             hintBg.setScrollFactor(0);  // 固定位置，不随相机移动
+            hintBg.setDepth(1000);      // 确保在最上层
             
             const hintText = scene.add.text(
-                config.width / 2,
-                config.height - 31,
+                config.width / 2,  // X坐标：画布宽度的一半
+                config.height - 31, // Y坐标：距离底部31像素
                 '🎈 点击屏幕飞行 | 多人实时同步',
                 {
                     fontSize: '16px',
@@ -663,8 +683,9 @@
                     align: 'center'
                 }
             );
-            hintText.setOrigin(0.5, 0.5);  // 设置文字锚点为中心
-            hintText.setScrollFactor(0);    // 固定位置，不随相机移动
+            hintText.setOrigin(0.5, 0.5);   // 设置文字锚点为中心（关键！）
+            hintText.setScrollFactor(0);     // 固定位置，不随相机移动
+            hintText.setDepth(1001);         // 确保文字在背景上方
             
             // ---------- 初始化 Supabase 实时连接 ----------
             initSupabaseRealtime(scene);
