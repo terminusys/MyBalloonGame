@@ -1,0 +1,6 @@
+{
+  "name": "my-balloon-game",
+  "version": "1.0.0",
+  "description": "多人实时热气球飞行游戏",
+  "main": "index.html"
+}
