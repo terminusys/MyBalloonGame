@@ -417,23 +417,26 @@
                 ease: 'Sine.easeInOut'
             });
 
-            // ---------- 添加操作提示文字（优化版）----------
+            // ---------- 添加操作提示文字（优化版，完全居中）----------
             const hintBg = scene.add.graphics();
-            hintBg.fillStyle(0x000000, 0.4);
-            hintBg.fillRoundedRect(config.width / 2 - 160, config.height - 50, 320, 35, 8);
+            hintBg.fillStyle(0x000000, 0.5);
+            hintBg.fillRoundedRect(config.width / 2 - 180, config.height - 50, 360, 38, 10);
+            hintBg.setScrollFactor(0);  // 固定位置，不随相机移动
             
             const hintText = scene.add.text(
                 config.width / 2,
-                config.height - 32,
+                config.height - 31,
                 '🎈 点击屏幕飞行 | 多人实时同步',
                 {
-                    fontSize: '15px',
+                    fontSize: '16px',
                     fontFamily: 'Inter, sans-serif',
                     color: '#FFFFFF',
-                    fontStyle: '500'
+                    fontStyle: '600',
+                    align: 'center'
                 }
             );
-            hintText.setOrigin(0.5, 0.5);
+            hintText.setOrigin(0.5, 0.5);  // 设置文字锚点为中心
+            hintText.setScrollFactor(0);    // 固定位置，不随相机移动
             
             // ---------- 初始化 Supabase 实时连接 ----------
             initSupabaseRealtime(scene);
