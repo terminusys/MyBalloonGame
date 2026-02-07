@@ -237,6 +237,8 @@
         function startGame() {
             const input = document.getElementById('player-name-input').value.trim();
             
+            console.log('🎯 startGame 被调用，输入值:', input);
+            
             if (!input) {
                 alert('请输入你的名字！');
                 return;
@@ -253,22 +255,34 @@
             document.getElementById('name-modal').classList.add('hidden');
             document.getElementById('change-name-btn').classList.remove('hidden');
             
+            console.log('✅ 名字已设置:', playerName);
+            console.log('📍 gameScene 状态:', gameScene ? '已存在' : '未创建');
+            
             // 如果是更改名字，更新显示
             if (isNameChanged && playerNameTextObject) {
                 playerNameTextObject.setText(playerName);
                 console.log('✏️ 名字已更改为:', playerName);
                 // 发送更新到 Supabase
                 sendPositionUpdate(balloon.x, balloon.y);
+                return;  // 更改名字的情况，直接返回
             }
             
             // 如果是首次启动游戏
             if (!gameStarted) {
                 gameStarted = true;
-                console.log('🎈 欢迎玩家:', playerName);
+                console.log('🎈 游戏首次启动，玩家:', playerName);
                 
-                // 如果游戏场景已经在等待，立即初始化
+                // 如果游戏场景已经创建，立即初始化
                 if (gameScene) {
-                    initializeGame.call(gameScene);
+                    console.log('🚀 场景已存在，立即初始化游戏...');
+                    try {
+                        initializeGame.call(gameScene);
+                        console.log('✅ 游戏初始化完成！');
+                    } catch (error) {
+                        console.error('❌ 游戏初始化失败:', error);
+                    }
+                } else {
+                    console.log('⏳ 场景未创建，等待 Phaser 场景初始化...');
                 }
             }
         }
@@ -478,15 +492,19 @@
             // 保存场景对象引用
             gameScene = this;
             
+            console.log('🎮 Phaser 场景创建完成');
+            console.log('📍 gameStarted 状态:', gameStarted);
+            console.log('👤 playerName:', playerName);
+            
             // 如果游戏还未开始（用户未输入名字），等待
             if (!gameStarted) {
                 console.log('⏳ 等待玩家输入名字...');
-                // 不需要轮询，startGame 函数会在名字输入后调用 initializeGame
+                // 使用事件监听等待游戏开始
                 return;
             }
             
             // 如果已经有名字，直接初始化
-            console.log('🚀 开始初始化游戏...');
+            console.log('🚀 立即开始初始化游戏...');
             initializeGame.call(this);
         }
         
