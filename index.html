@@ -125,9 +125,41 @@
             font-size: 48px;
             margin-bottom: 15px;
         }
+        
+        /* 更改名字按钮样式 */
+        #change-name-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+            z-index: 999;
+            display: none;
+        }
+        #change-name-btn.show {
+            display: block;
+        }
+        #change-name-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        #change-name-btn:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
+    <!-- 更改名字按钮 -->
+    <button id="change-name-btn">👤 更改名字</button>
+
     <!-- 名字输入弹窗 -->
     <div id="name-modal">
         <div class="modal-content">
@@ -158,17 +190,27 @@
         // ==================== 玩家名字管理 ====================
         let playerName = '';
         let gameStarted = false;
+        let playerNameTextObject = null;  // 保存玩家名字文本对象的引用
         
         // 从 localStorage 读取保存的名字
         const savedName = localStorage.getItem('balloonPlayerName');
         if (savedName) {
             playerName = savedName;
             document.getElementById('name-modal').classList.add('hidden');
+            document.getElementById('change-name-btn').classList.add('show');
             gameStarted = true;
         }
         
         // 处理开始游戏按钮
         document.getElementById('start-game-btn').addEventListener('click', startGame);
+        
+        // 处理更改名字按钮
+        document.getElementById('change-name-btn').addEventListener('click', function() {
+            document.getElementById('name-modal').classList.remove('hidden');
+            document.getElementById('player-name-input').value = playerName;
+            document.getElementById('player-name-input').focus();
+            document.getElementById('player-name-input').select();
+        });
         
         // 处理回车键
         document.getElementById('player-name-input').addEventListener('keypress', function(e) {
@@ -190,12 +232,24 @@
                 return;
             }
             
+            const isNameChanged = (playerName && playerName !== input);
             playerName = input;
             localStorage.setItem('balloonPlayerName', playerName);
             document.getElementById('name-modal').classList.add('hidden');
-            gameStarted = true;
+            document.getElementById('change-name-btn').classList.add('show');
             
-            console.log('🎈 欢迎玩家:', playerName);
+            // 如果是更改名字，更新显示
+            if (isNameChanged && playerNameTextObject) {
+                playerNameTextObject.setText(playerName);
+                console.log('✏️ 名字已更改为:', playerName);
+                // 发送更新到 Supabase
+                sendPositionUpdate(balloon.x, balloon.y);
+            }
+            
+            if (!gameStarted) {
+                gameStarted = true;
+                console.log('🎈 欢迎玩家:', playerName);
+            }
         }
         
         // ==================== Supabase 配置 ====================
@@ -467,6 +521,9 @@
             );
             playerNameText.setOrigin(0.5, 0.5);
             balloon.add(playerNameText);
+            
+            // 保存到全局变量，用于更改名字时更新
+            playerNameTextObject = playerNameText;
 
             // 设置初始目标位置为当前位置
             targetX = balloon.x;
