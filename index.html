@@ -1161,6 +1161,23 @@
         const ADMIN_PASSWORD = 'DDKJ88888888';
         let isAdminLoggedIn = false;
         
+        // ==================== Supabase 配置 ====================
+        const SUPABASE_URL = 'https://ksctfambipodjbrtjaby.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_8MsjbT3RenOKGNyMafKv-Q_b8MNN7Qn';
+        
+        // 初始化 Supabase 客户端
+        let supabaseClient = null;
+        try {
+            if (typeof window.supabase !== 'undefined') {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('✅ Supabase 客户端初始化成功');
+            } else {
+                console.error('❌ Supabase 库未加载！');
+            }
+        } catch (error) {
+            console.error('❌ Supabase 初始化失败:', error);
+        }
+        
         // ==================== 游戏元素生成参数 ====================
         let gameSettings = {
             coinSpawnRate: 0.02,        // 金币生成概率（每帧）
@@ -2207,30 +2224,11 @@
         }
         
         // ==================== Supabase 配置 ====================
-        const SUPABASE_URL = 'https://ksctfambipodjbrtjaby.supabase.co';
-        // ⚠️ 注意：请将下面的 anon key 替换为你的真实 Supabase anon key
-        // 真实的 anon key 应该是以 "eyJ" 开头的长字符串（JWT token）
-        // 你可以在 Supabase Dashboard > Settings > API 中找到
-                const SUPABASE_ANON_KEY = 'sb_publishable_8MsjbT3RenOKGNyMafKv-Q_b8MNN7Qn';
-
         // 生成当前玩家的唯一ID
         const playerId = 'player_' + Math.random().toString(36).substr(2, 9);
         
         // 玩家名字将在用户输入后设置
         console.log('🎈 玩家 ID:', playerId);
-        
-        // 创建 Supabase 客户端（延迟初始化，避免重复声明）
-        let supabaseClient = null;
-        try {
-            if (typeof window.supabase !== 'undefined') {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('✅ Supabase 客户端初始化成功');
-            } else {
-                console.error('❌ Supabase 库未加载！');
-            }
-        } catch (error) {
-            console.error('❌ Supabase 初始化失败:', error);
-        }
 
         // ==================== 从 Supabase 加载全局配置 ====================
         async function loadGlobalSettings() {
