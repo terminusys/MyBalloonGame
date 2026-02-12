@@ -979,19 +979,106 @@
     </div>
     
     <!-- 名字输入弹窗 -->
+    <!-- 登录界面 -->
     <div id="name-modal">
         <div class="modal-content">
             <div class="emoji-icon">🎈</div>
             <h2>欢迎来到热气球世界</h2>
-            <p>请输入你的名字开始游戏</p>
+            <p>请登录开始游戏</p>
+            
             <input 
                 type="text" 
-                id="player-name-input" 
-                placeholder="例如：张三、李四..." 
-                maxlength="10"
-                autocomplete="off"
+                id="login-username" 
+                placeholder="用户名" 
+                maxlength="20"
+                autocomplete="username"
             />
-            <button id="start-game-btn">🚀 开始飞行</button>
+            <input 
+                type="password" 
+                id="login-password" 
+                placeholder="密码" 
+                maxlength="50"
+                autocomplete="current-password"
+            />
+            <button id="login-btn">🚀 登录</button>
+            <button id="show-register-btn" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); margin-top: 10px;">📝 注册新账号</button>
+        </div>
+    </div>
+
+    <!-- 注册界面 -->
+    <div id="register-modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="emoji-icon">📝</div>
+            <h2>用户注册</h2>
+            <p>请填写您的信息</p>
+            
+            <div style="max-height: 400px; overflow-y: auto; padding: 10px;">
+                <input 
+                    type="text" 
+                    id="register-username" 
+                    placeholder="用户名（必填）" 
+                    maxlength="20"
+                    required
+                />
+                <input 
+                    type="password" 
+                    id="register-password" 
+                    placeholder="密码（必填）" 
+                    maxlength="50"
+                    required
+                />
+                <input 
+                    type="password" 
+                    id="register-password-confirm" 
+                    placeholder="确认密码（必填）" 
+                    maxlength="50"
+                    required
+                />
+                
+                <select id="register-country" style="width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px;">
+                    <option value="">选择国家（可选）</option>
+                    <option value="中国">中国</option>
+                    <option value="美国">美国</option>
+                    <option value="日本">日本</option>
+                    <option value="韩国">韩国</option>
+                    <option value="英国">英国</option>
+                    <option value="法国">法国</option>
+                    <option value="德国">德国</option>
+                    <option value="其他">其他</option>
+                </select>
+                
+                <input 
+                    type="text" 
+                    id="register-region" 
+                    placeholder="地区/城市（可选）" 
+                    maxlength="50"
+                />
+                
+                <select id="register-gender" style="width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px;">
+                    <option value="">选择性别（可选）</option>
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                    <option value="保密">保密</option>
+                </select>
+                
+                <input 
+                    type="number" 
+                    id="register-age" 
+                    placeholder="年龄（可选）" 
+                    min="1"
+                    max="150"
+                />
+                
+                <input 
+                    type="tel" 
+                    id="register-phone" 
+                    placeholder="手机号（可选）" 
+                    maxlength="20"
+                />
+            </div>
+            
+            <button id="register-submit-btn">✅ 提交注册</button>
+            <button id="back-to-login-btn" style="background: #6c757d; margin-top: 10px;">← 返回登录</button>
         </div>
     </div>
 
@@ -1037,15 +1124,41 @@
         let gameDiamonds = 0;               // 钻石（游戏积分）
         let totalCoinsCollected = 0;        // 累计收集的金币数
         
-        // 从 localStorage 读取保存的名字
+        // 检查是否有已登录的用户
+        const savedUserId = localStorage.getItem('currentUserId');
         const savedName = localStorage.getItem('balloonPlayerName');
-        if (savedName) {
+        if (savedUserId && savedName) {
+            // 自动登录
+            currentUserId = parseInt(savedUserId);
             playerName = savedName;
+            console.log('🔐 检测到已登录用户:', playerName, '(ID:', currentUserId, ')');
+            
             document.getElementById('name-modal').classList.add('hidden');
             document.getElementById('change-name-btn').classList.remove('hidden');
             gameStarted = true;
+            
+            // 异步加载用户数据
+            (async () => {
+                try {
+                    const { data } = await supabaseClient
+                        .from('game_users')
+                        .select('diamonds, coins_collected')
+                        .eq('id', currentUserId)
+                        .single();
+                    
+                    if (data) {
+                        gameDiamonds = data.diamonds || 0;
+                        totalCoinsCollected = data.coins_collected || 0;
+                        updateDiamonds();
+                        console.log('📊 已同步用户数据 - 钻石:', gameDiamonds, '金币:', totalCoinsCollected);
+                    }
+                } catch (error) {
+                    console.error('❌ 加载用户数据失败:', error);
+                }
+            })();
         } else {
             document.getElementById('change-name-btn').classList.add('hidden');
+            console.log('🚪 未检测到登录信息，显示登录界面');
         }
         
         // 从 localStorage 读取保存的钻石和累计金币
@@ -1066,22 +1179,249 @@
         // const savedSettings = localStorage.getItem('gameSettings'); // 已废弃
         console.log('⚙️ 游戏设置将在登录后从 Supabase 加载');
         
-        // 处理开始游戏按钮
-        document.getElementById('start-game-btn').addEventListener('click', startGame);
+        // ==================== 用户登录和注册系统 ====================
         
-        // 处理更改名字按钮
+        let currentUserId = null;  // 当前登录用户的ID
+        
+        // 登录按钮
+        document.getElementById('login-btn').addEventListener('click', handleLogin);
+        
+        // 显示注册界面
+        document.getElementById('show-register-btn').addEventListener('click', function() {
+            document.getElementById('name-modal').style.display = 'none';
+            document.getElementById('register-modal').style.display = 'flex';
+        });
+        
+        // 返回登录界面
+        document.getElementById('back-to-login-btn').addEventListener('click', function() {
+            document.getElementById('register-modal').style.display = 'none';
+            document.getElementById('name-modal').style.display = 'flex';
+        });
+        
+        // 提交注册
+        document.getElementById('register-submit-btn').addEventListener('click', handleRegister);
+        
+        // 回车键登录
+        document.getElementById('login-username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('login-password').focus();
+            }
+        });
+        document.getElementById('login-password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
+        });
+        
+        // 登录处理函数
+        async function handleLogin() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            if (!username || !password) {
+                alert('请输入用户名和密码！');
+                return;
+            }
+            
+            try {
+                console.log('🔐 尝试登录，用户名:', username);
+                
+                // 从Supabase查询用户
+                const { data, error } = await supabaseClient
+                    .from('game_users')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', password)  // 注意：生产环境应该使用加密密码
+                    .single();
+                
+                if (error) {
+                    console.error('❌ 登录失败:', error);
+                    alert('❌ 登录失败：用户名或密码错误！');
+                    return;
+                }
+                
+                if (data) {
+                    console.log('✅ 登录成功！用户:', data);
+                    
+                    // 保存用户信息
+                    currentUserId = data.id;
+                    playerName = data.username;
+                    gameDiamonds = data.diamonds || 0;
+                    totalCoinsCollected = data.coins_collected || 0;
+                    
+                    // 更新最后登录时间
+                    await supabaseClient
+                        .from('game_users')
+                        .update({ last_login: new Date().toISOString() })
+                        .eq('id', currentUserId);
+                    
+                    // 保存到localStorage
+                    localStorage.setItem('currentUserId', currentUserId);
+                    localStorage.setItem('balloonPlayerName', playerName);
+                    localStorage.setItem('gameDiamonds', gameDiamonds);
+                    localStorage.setItem('totalCoinsCollected', totalCoinsCollected);
+                    
+                    // 更新显示
+                    updateDiamonds();
+                    
+                    // 开始游戏
+                    await startGameAfterLogin();
+                    
+                    alert('✅ 欢迎回来，' + playerName + '！\n\n💎 钻石：' + gameDiamonds + '\n🪙 金币：' + totalCoinsCollected);
+                }
+            } catch (error) {
+                console.error('❌ 登录异常:', error);
+                alert('❌ 登录失败：' + error.message);
+            }
+        }
+        
+        // 注册处理函数
+        async function handleRegister() {
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            const passwordConfirm = document.getElementById('register-password-confirm').value;
+            const country = document.getElementById('register-country').value;
+            const region = document.getElementById('register-region').value.trim();
+            const gender = document.getElementById('register-gender').value;
+            const age = document.getElementById('register-age').value;
+            const phone = document.getElementById('register-phone').value.trim();
+            
+            // 验证必填项
+            if (!username) {
+                alert('❌ 请输入用户名！');
+                return;
+            }
+            
+            if (username.length < 2) {
+                alert('❌ 用户名至少需要2个字符！');
+                return;
+            }
+            
+            if (!password) {
+                alert('❌ 请输入密码！');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('❌ 密码至少需要6个字符！');
+                return;
+            }
+            
+            if (password !== passwordConfirm) {
+                alert('❌ 两次输入的密码不一致！');
+                return;
+            }
+            
+            try {
+                console.log('📝 尝试注册，用户名:', username);
+                
+                // 检查用户名是否已存在
+                const { data: existingUser } = await supabaseClient
+                    .from('game_users')
+                    .select('username')
+                    .eq('username', username)
+                    .single();
+                
+                if (existingUser) {
+                    alert('❌ 用户名已被使用，请换一个！');
+                    return;
+                }
+                
+                // 插入新用户
+                const { data, error } = await supabaseClient
+                    .from('game_users')
+                    .insert([{
+                        username: username,
+                        password: password,  // 注意：生产环境应该加密
+                        country: country || null,
+                        region: region || null,
+                        gender: gender || null,
+                        age: age ? parseInt(age) : null,
+                        phone: phone || null,
+                        diamonds: 0,
+                        coins_collected: 0
+                    }])
+                    .select()
+                    .single();
+                
+                if (error) {
+                    console.error('❌ 注册失败:', error);
+                    alert('❌ 注册失败：' + error.message);
+                    return;
+                }
+                
+                if (data) {
+                    console.log('✅ 注册成功！新用户:', data);
+                    
+                    alert('✅ 注册成功！\n\n欢迎加入热气球世界，' + username + '！\n\n请使用刚才的用户名和密码登录。');
+                    
+                    // 返回登录界面，并自动填充用户名
+                    document.getElementById('register-modal').style.display = 'none';
+                    document.getElementById('name-modal').style.display = 'flex';
+                    document.getElementById('login-username').value = username;
+                    document.getElementById('login-password').focus();
+                    
+                    // 清空注册表单
+                    document.getElementById('register-username').value = '';
+                    document.getElementById('register-password').value = '';
+                    document.getElementById('register-password-confirm').value = '';
+                    document.getElementById('register-country').value = '';
+                    document.getElementById('register-region').value = '';
+                    document.getElementById('register-gender').value = '';
+                    document.getElementById('register-age').value = '';
+                    document.getElementById('register-phone').value = '';
+                }
+            } catch (error) {
+                console.error('❌ 注册异常:', error);
+                alert('❌ 注册失败：' + error.message);
+            }
+        }
+        
+        // 登录后启动游戏
+        async function startGameAfterLogin() {
+            document.getElementById('name-modal').classList.add('hidden');
+            document.getElementById('change-name-btn').classList.remove('hidden');
+            
+            console.log('✅ 用户已登录:', playerName);
+            
+            // 如果是首次启动游戏
+            if (!gameStarted) {
+                console.log('🎈 游戏首次启动，玩家:', playerName);
+                
+                // 加载全局配置
+                console.log('🔄 正在加载全局游戏配置...');
+                await loadGlobalSettings();
+                
+                gameStarted = true;
+                
+                // 如果游戏场景已经创建，立即初始化
+                if (gameScene) {
+                    console.log('🚀 场景已存在，立即初始化游戏...');
+                    try {
+                        initializeGame.call(gameScene);
+                        console.log('✅ 游戏初始化完成！');
+                    } catch (error) {
+                        console.error('❌ 游戏初始化失败:', error);
+                    }
+                } else {
+                    console.log('⏳ 场景未创建，等待 Phaser 场景初始化...');
+                }
+            }
+        }
+        
+        // 处理更改名字按钮（已登录用户不能更改名字）
         document.getElementById('change-name-btn').addEventListener('click', function() {
-            document.getElementById('name-modal').classList.remove('hidden');
-            document.getElementById('player-name-input').value = playerName;
-            document.getElementById('player-name-input').focus();
-            document.getElementById('player-name-input').select();
+            alert('💡 提示\n\n用户名是注册时设定的，无法更改。\n\n如需使用其他名字，请注册新账号。');
         });
         
         // 处理退出登录按钮
         document.getElementById('logout-btn').addEventListener('click', function() {
-            if (confirm('确定要退出登录吗？\n\n这将清除保存的玩家名称，下次访问需要重新输入。')) {
-                // 清除保存的玩家名称
+            if (confirm('确定要退出登录吗？\n\n退出后需要重新登录。')) {
+                // 清除所有登录信息
+                localStorage.removeItem('currentUserId');
                 localStorage.removeItem('balloonPlayerName');
+                currentUserId = null;
+                playerName = '';
                 // 刷新页面
                 location.reload();
             }
@@ -1511,62 +1851,11 @@
             }
         });
         
+        // 旧的startGame函数已被登录系统替代，不再使用
+        // 保留以防兼容性问题
         async function startGame() {
-            const input = document.getElementById('player-name-input').value.trim();
-            
-            console.log('🎯 startGame 被调用，输入值:', input);
-            
-            if (!input) {
-                alert('请输入你的名字！');
-                return;
-            }
-            
-            if (input.length < 2) {
-                alert('名字至少需要2个字符！');
-                return;
-            }
-            
-            const isNameChanged = (playerName && playerName !== input);
-            playerName = input;
-            localStorage.setItem('balloonPlayerName', playerName);
-            document.getElementById('name-modal').classList.add('hidden');
-            document.getElementById('change-name-btn').classList.remove('hidden');
-            
-            console.log('✅ 名字已设置:', playerName);
-            console.log('📍 gameScene 状态:', gameScene ? '已存在' : '未创建');
-            
-            // 如果是更改名字，更新显示
-            if (isNameChanged && playerNameTextObject) {
-                playerNameTextObject.setText(playerName);
-                console.log('✏️ 名字已更改为:', playerName);
-                // 发送更新到 Supabase
-                sendPositionUpdate(balloon.x, balloon.y);
-                return;  // 更改名字的情况，直接返回
-            }
-            
-            // 如果是首次启动游戏
-            if (!gameStarted) {
-                console.log('🎈 游戏首次启动，玩家:', playerName);
-                
-                // 🔥 关键：加载全局配置
-                console.log('🔄 正在加载全局游戏配置...');
-                await loadGlobalSettings();
-                
-                gameStarted = true;
-                
-                // 如果游戏场景已经创建，立即初始化
-                if (gameScene) {
-                    console.log('🚀 场景已存在，立即初始化游戏...');
-                    try {
-                        initializeGame.call(gameScene);
-                        console.log('✅ 游戏初始化完成！');
-                    } catch (error) {
-                        console.error('❌ 游戏初始化失败:', error);
-                    }
-                } else {
-                    console.log('⏳ 场景未创建，等待 Phaser 场景初始化...');
-                }
-            }
+            console.warn('⚠️ 旧的startGame函数被调用，请使用新的登录系统');
+            alert('请使用登录功能！');
         }
         
         // ==================== 广告位管理函数 ====================
@@ -2680,8 +2969,43 @@
                 diamondsText.setText('💎 ' + gameDiamonds);
             }
             
+            // 保存到数据库
+            saveUserGameData();
+            
             // 检查是否可以用金币兑换钻石
             checkCoinToDiamondExchange();
+        }
+        
+        // ==================== 保存用户游戏数据到数据库 ====================
+        async function saveUserGameData() {
+            if (!currentUserId) {
+                console.warn('⚠️ 用户未登录，无法保存到数据库');
+                // 保存到localStorage作为备份
+                localStorage.setItem('gameDiamonds', gameDiamonds);
+                localStorage.setItem('totalCoinsCollected', totalCoinsCollected);
+                return;
+            }
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('game_users')
+                    .update({
+                        diamonds: gameDiamonds,
+                        coins_collected: totalCoinsCollected
+                    })
+                    .eq('id', currentUserId);
+                
+                if (error) {
+                    console.error('❌ 保存用户数据失败:', error);
+                } else {
+                    console.log('💾 用户数据已保存 - 钻石:', gameDiamonds, '金币:', totalCoinsCollected);
+                    // 同时保存到localStorage
+                    localStorage.setItem('gameDiamonds', gameDiamonds);
+                    localStorage.setItem('totalCoinsCollected', totalCoinsCollected);
+                }
+            } catch (error) {
+                console.error('❌ 保存用户数据异常:', error);
+            }
         }
         
         // ==================== 金币兑换钻石检查 ====================
