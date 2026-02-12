@@ -1009,6 +1009,10 @@
             healthPackInterval: 100000  // 加血包生成间隔（毫秒）
         };
         
+        // ==================== 全局游戏数据 ====================
+        let gameDiamonds = 0;               // 钻石（游戏积分）
+        let totalCoinsCollected = 0;        // 累计收集的金币数
+        
         // 从 localStorage 读取保存的名字
         const savedName = localStorage.getItem('balloonPlayerName');
         if (savedName) {
@@ -1660,10 +1664,6 @@
         
         // 玩家名字将在用户输入后设置
         console.log('🎈 玩家 ID:', playerId);
-        
-        // ==================== 全局游戏数据 ====================
-        let gameDiamonds = 0;               // 钻石（游戏积分）
-        let totalCoinsCollected = 0;        // 累计收集的金币数
         
         // 创建 Supabase 客户端（延迟初始化，避免重复声明）
         let supabaseClient = null;
