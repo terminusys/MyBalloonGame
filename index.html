@@ -1231,8 +1231,8 @@
                     if (data) {
                         gameDiamonds = data.diamonds || 0;
                         totalCoinsCollected = data.coins_collected || 0;
-                        updateDiamonds();
                         console.log('📊 已同步用户数据 - 钻石:', gameDiamonds, '金币:', totalCoinsCollected);
+                        // updateDiamonds() 会在游戏场景创建后自动调用
                     }
                 } catch (error) {
                     console.error('❌ 加载用户数据失败:', error);
@@ -1343,10 +1343,7 @@
                     localStorage.setItem('gameDiamonds', gameDiamonds);
                     localStorage.setItem('totalCoinsCollected', totalCoinsCollected);
                     
-                    // 更新显示
-                    updateDiamonds();
-                    
-                    // 开始游戏
+                    // 开始游戏（UI 会在游戏场景创建时自动更新）
                     await startGameAfterLogin();
                     
                     alert('✅ 欢迎回来，' + playerName + '！\n\n💎 钻石：' + gameDiamonds + '\n🪙 金币：' + totalCoinsCollected);
@@ -3449,6 +3446,9 @@
             );
             diamondsText.setScrollFactor(0);
             diamondsText.setDepth(1000);
+            
+            // 更新钻石显示（使用已登录用户的数据）
+            updateDiamonds();
 
             // 设置初始目标位置为当前位置
             targetX = balloon.x;
