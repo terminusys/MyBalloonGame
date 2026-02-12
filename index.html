@@ -393,6 +393,10 @@
                     <label>位置 Y（0-600）：</label>
                     <input type="number" id="new-ad-y" value="200" min="50" max="550" />
                 </div>
+                <div class="form-group">
+                    <label>图片透明度（0-1，1为完全不透明）：</label>
+                    <input type="number" id="new-ad-opacity" value="0.9" min="0" max="1" step="0.1" />
+                </div>
                 <button class="btn-primary" id="add-ad-balloon-btn" style="width: 100%;">添加广告气球</button>
             </div>
             
@@ -597,6 +601,7 @@
             const imageInput = document.getElementById('new-ad-image');
             const x = parseInt(document.getElementById('new-ad-x').value);
             const y = parseInt(document.getElementById('new-ad-y').value);
+            const opacity = parseFloat(document.getElementById('new-ad-opacity').value);
             
             if (!text && !imageInput.files[0]) {
                 alert('请至少输入广告词或上传广告图片！');
@@ -617,7 +622,8 @@
                         text: text,
                         image: event.target.result,
                         x: x,
-                        y: y
+                        y: y,
+                        opacity: opacity
                     };
                     adBalloons.push(adData);
                     saveAdBalloonsToStorage();
@@ -642,7 +648,8 @@
                     text: text,
                     image: null,
                     x: x,
-                    y: y
+                    y: y,
+                    opacity: opacity
                 };
                 adBalloons.push(adData);
                 saveAdBalloonsToStorage();
@@ -677,6 +684,7 @@
                     <p style="color: rgba(255,255,255,0.9); margin: 5px 0;">广告词：${ad.text || '无'}</p>
                     <p style="color: rgba(255,255,255,0.9); margin: 5px 0;">图片：${ad.image ? '已上传' : '无'}</p>
                     <p style="color: rgba(255,255,255,0.9); margin: 5px 0;">位置：(${ad.x}, ${ad.y})</p>
+                    <p style="color: rgba(255,255,255,0.9); margin: 5px 0;">透明度：${ad.opacity !== undefined ? ad.opacity : 0.9}</p>
                     ${ad.image ? `<img src="${ad.image}" class="image-preview show" alt="广告图片" />` : ''}
                     <button class="btn-danger" style="width: 100%; margin-top: 10px;" onclick="deleteAdBalloon(${ad.id})">删除</button>
                 `;
@@ -919,18 +927,46 @@
                 
                 // 等待纹理加载完成
                 scene.textures.once('addtexture', function() {
+                    const texture = scene.textures.get(textureKey);
+                    const frame = texture.get();
+                    
+                    // 获取图片原始尺寸
+                    const originalWidth = frame.width;
+                    const originalHeight = frame.height;
+                    
+                    // 设置目标最大尺寸
+                    const maxSize = 120;
+                    
+                    // 计算缩放比例，保持宽高比
+                    let scale = 1;
+                    if (originalWidth > originalHeight) {
+                        // 宽度较大，以宽度为准
+                        scale = maxSize / originalWidth;
+                    } else {
+                        // 高度较大，以高度为准
+                        scale = maxSize / originalHeight;
+                    }
+                    
+                    // 创建图片
                     const adImage = scene.add.image(0, 50, textureKey);
-                    adImage.setDisplaySize(100, 100);  // 限制图片大小
+                    adImage.setScale(scale);  // 使用计算的缩放比例，保持原始比例
                     adImage.setOrigin(0.5, 0.5);
+                    
+                    // 设置图片透明度
+                    const imageOpacity = adData.opacity !== undefined ? adData.opacity : 0.9;
+                    adImage.setAlpha(imageOpacity);
+                    
                     container.add(adImage);
                 }, null, textureKey);
             }
             
-            // 设置透明度（背景气球稍微透明）
-            container.setAlpha(0.85);
+            // 设置透明度（气球本体的透明度）
+            const balloonOpacity = adData.opacity !== undefined ? adData.opacity * 0.9 : 0.85;
+            container.setAlpha(balloonOpacity);
             
-            // 设置深度（在背景，但在云朵之上）
-            container.setDepth(5);
+            // 设置深度（在玩家气球下方，但在金币和障碍物上方）
+            // 层级顺序：背景(0) < 云朵(1) < 广告气球(3) < 金币/障碍物(10) < 玩家气球(100)
+            container.setDepth(3);
             
             // 添加缓慢晃动动画
             const swayOffset = Math.random() * Math.PI * 2;  // 随机起始相位
@@ -945,7 +981,7 @@
                 swayOffset: swayOffset
             });
             
-            console.log('🎈 广告气球已创建:', adData.text);
+            console.log('🎈 广告气球已创建:', adData.text, '透明度:', adData.opacity);
         }
         
         // 加载所有广告气球到游戏中
@@ -985,6 +1021,9 @@
             coin.fillStyle(0xFFFFAA, 1);
             coin.fillCircle(-4, -4, 4);
             
+            // 设置深度（在广告气球上方，玩家气球下方）
+            coin.setDepth(10);
+            
             // 添加旋转动画
             scene.tweens.add({
                 targets: coin,
@@ -1019,6 +1058,9 @@
             const obstacle = scene.add.graphics();
             obstacle.x = x;
             obstacle.y = y;
+            
+            // 设置深度（在广告气球上方，玩家气球下方）
+            obstacle.setDepth(10);
             
             if (type === 'bird') {
                 // 绘制小鸟障碍物
@@ -1227,6 +1269,9 @@
             // 设置透明度（其他玩家稍微透明一点）
             container.setAlpha(0.8);
             
+            // 设置深度（和主玩家气球一样，在最高层）
+            container.setDepth(100);
+            
             return {
                 container: container,
                 targetX: data.x,
@@ -1309,6 +1354,9 @@
             );
             playerNameText.setOrigin(0.5, 0.5);
             balloon.add(playerNameText);
+            
+            // 设置玩家气球的深度（最高层，确保不被遮挡）
+            balloon.setDepth(100);
             
             // 保存到全局变量，用于更改名字时更新
             playerNameTextObject = playerNameText;
