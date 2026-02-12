@@ -536,23 +536,110 @@
             color: #FFA726;
         }
         
-        /* 管理员支付设置弹窗 */
-        #payment-settings-modal {
+        /* 统一管理员设置弹窗 */
+        #admin-settings-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 2500;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
             overflow-y: auto;
+            padding: 20px 0;
         }
-        #payment-settings-modal.show {
+        #admin-settings-modal.show {
             display: flex;
+        }
+        
+        /* 标签页导航 */
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+        .admin-tab {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .admin-tab:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .admin-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        
+        /* 标签页内容 */
+        .admin-tab-content {
+            display: none;
+        }
+        .admin-tab-content.active {
+            display: block;
+        }
+        
+        /* 设置分组 */
+        .settings-group {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .settings-group h3 {
+            color: #FFD700;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 10px;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 12px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+        .setting-item label {
+            color: #fff;
+            font-size: 14px;
+            flex: 1;
+        }
+        .setting-item input[type="number"],
+        .setting-item input[type="text"] {
+            width: 120px;
+            padding: 8px 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+            text-align: center;
+        }
+        .setting-item input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .setting-hint {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            margin-top: 5px;
         }
         
         @media (max-width: 768px) {
@@ -569,84 +656,190 @@
     <!-- 更改名字按钮 -->
     <button id="change-name-btn">👤 更改名字</button>
     
-    <!-- 广告位设置按钮 -->
-    <button id="admin-btn">🎯 广告位设置</button>
-    
-    <!-- 支付设置按钮（管理员） -->
-    <button id="payment-settings-btn" style="position: fixed; top: 95px; left: 15px; padding: 10px 18px; background: linear-gradient(135deg, #FF6B6B 0%, #C92A2A 100%); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4); transition: all 0.3s; z-index: 999;">💳 支付设置</button>
+    <!-- 统一管理员设置按钮 -->
+    <button id="admin-settings-btn" style="position: fixed; top: 55px; left: 15px; padding: 10px 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s; z-index: 999;">⚙️ 管理员设置</button>
     
     <!-- 充值按钮 -->
     <button id="recharge-btn">💰 充值</button>
     
-    <!-- 管理员登录弹窗 -->
-    <div id="admin-login-modal">
-        <div class="modal-content">
-            <div class="emoji-icon">🔐</div>
-            <h2>管理员登录</h2>
-            <p>请输入管理员账号和密码</p>
-            <div class="form-group">
-                <input 
-                    type="text" 
-                    id="admin-username" 
-                    placeholder="管理员账号" 
-                    autocomplete="off"
-                />
-            </div>
-            <div class="form-group" style="margin-top: 15px;">
-                <input 
-                    type="password" 
-                    id="admin-password" 
-                    placeholder="管理员密码" 
-                    autocomplete="off"
-                />
-            </div>
-            <div class="btn-group">
-                <button class="btn-secondary" id="cancel-login-btn">取消</button>
-                <button class="btn-primary" id="confirm-login-btn">登录</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 广告位管理面板 -->
-    <div id="ad-panel">
-        <div class="panel-content">
-            <h2>🎈 广告位管理面板</h2>
+    <!-- 统一管理员设置面板 -->
+    <div id="admin-settings-modal">
+        <div class="panel-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <h2 style="text-align: center; color: #fff; margin-bottom: 20px;">⚙️ 管理员设置中心</h2>
             
-            <!-- 添加新广告气球 -->
-            <div class="ad-balloon-item">
-                <h4>➕ 添加新广告气球</h4>
-                <div class="form-group">
-                    <label>广告词：</label>
-                    <textarea id="new-ad-text" placeholder="请输入广告词..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>广告图片：</label>
-                    <input type="file" id="new-ad-image" accept="image/*" />
-                    <img id="new-ad-image-preview" class="image-preview" alt="预览" />
-                </div>
-                <div class="form-group">
-                    <label>位置 X（0-800）：</label>
-                    <input type="number" id="new-ad-x" value="200" min="50" max="750" />
-                </div>
-                <div class="form-group">
-                    <label>位置 Y（0-600）：</label>
-                    <input type="number" id="new-ad-y" value="200" min="50" max="550" />
-                </div>
-                <div class="form-group">
-                    <label>图片透明度（0-1，1为完全不透明）：</label>
-                    <input type="number" id="new-ad-opacity" value="0.9" min="0" max="1" step="0.1" />
-                </div>
-                <button class="btn-primary" id="add-ad-balloon-btn" style="width: 100%;">添加广告气球</button>
+            <!-- 标签页导航 -->
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="game-params">🎮 游戏参数</button>
+                <button class="admin-tab" data-tab="payment">💳 支付设置</button>
+                <button class="admin-tab" data-tab="ads">🎯 广告管理</button>
             </div>
             
-            <!-- 现有广告气球列表 -->
-            <div id="ad-balloons-list">
-                <h4 style="color: #fff; margin-bottom: 15px;">📋 现有广告气球</h4>
-                <div id="ad-balloons-container"></div>
+            <!-- 游戏参数标签页 -->
+            <div class="admin-tab-content active" id="game-params-content">
+                <!-- 金币设置 -->
+                <div class="settings-group">
+                    <h3>🪙 金币参数</h3>
+                    <div class="setting-item">
+                        <label>生成概率（每帧）</label>
+                        <input type="number" id="coin-spawn-rate" step="0.001" min="0.001" max="0.1" value="0.02">
+                    </div>
+                    <div class="setting-hint">建议值：0.01-0.03，数值越大生成越快</div>
+                    
+                    <div class="setting-item">
+                        <label>最大数量</label>
+                        <input type="number" id="coin-max-count" min="5" max="50" value="20">
+                    </div>
+                    <div class="setting-hint">屏幕上同时存在的金币数量上限</div>
+                    
+                    <div class="setting-item">
+                        <label>存在时间（毫秒）</label>
+                        <input type="number" id="coin-lifetime" min="5000" max="30000" step="1000" value="12000">
+                    </div>
+                    <div class="setting-hint">金币自动消失的时间（推荐10000-15000）</div>
+                </div>
+                
+                <!-- 钻石设置 -->
+                <div class="settings-group">
+                    <h3>💎 钻石道具参数</h3>
+                    <div class="setting-item">
+                        <label>生成间隔（毫秒）</label>
+                        <input type="number" id="diamond-spawn-interval" min="30000" max="300000" step="10000" value="100000">
+                    </div>
+                    <div class="setting-hint">每次生成钻石的时间间隔（推荐60000-120000）</div>
+                    
+                    <div class="setting-item">
+                        <label>每次生成数量</label>
+                        <input type="number" id="diamond-spawn-count" min="1" max="10" value="5">
+                    </div>
+                    <div class="setting-hint">每次生成的钻石道具数量</div>
+                </div>
+                
+                <!-- 障碍物设置 -->
+                <div class="settings-group">
+                    <h3>⚡ 障碍物参数</h3>
+                    <div class="setting-item">
+                        <label>生成概率（每帧）</label>
+                        <input type="number" id="obstacle-spawn-rate" step="0.001" min="0.001" max="0.05" value="0.01">
+                    </div>
+                    <div class="setting-hint">建议值：0.005-0.015</div>
+                    
+                    <div class="setting-item">
+                        <label>最大数量</label>
+                        <input type="number" id="obstacle-max-count" min="1" max="15" value="5">
+                    </div>
+                </div>
+                
+                <!-- 加血包设置 -->
+                <div class="settings-group">
+                    <h3>💊 加血包参数</h3>
+                    <div class="setting-item">
+                        <label>生成间隔（毫秒）</label>
+                        <input type="number" id="healthpack-interval" min="30000" max="300000" step="10000" value="100000">
+                    </div>
+                    <div class="setting-hint">每次生成加血包的时间间隔</div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn-secondary" id="reset-game-params-btn">恢复默认</button>
+                    <button class="btn-primary" id="save-game-params-btn">保存参数</button>
+                </div>
             </div>
             
-            <div class="btn-group">
-                <button class="btn-secondary" id="close-panel-btn">关闭面板</button>
+            <!-- 支付设置标签页 -->
+            <div class="admin-tab-content" id="payment-content">
+                <!-- 支付宝设置 -->
+                <div class="ad-balloon-item">
+                    <h4>📱 支付宝收款设置</h4>
+                    <div class="form-group">
+                        <label>上传收款码图片：</label>
+                        <input type="file" id="alipay-qrcode-upload" accept="image/*" />
+                        <img id="alipay-qrcode-preview" class="image-preview" alt="支付宝收款码" />
+                    </div>
+                </div>
+                
+                <!-- 微信设置 -->
+                <div class="ad-balloon-item">
+                    <h4>💚 微信收款设置</h4>
+                    <div class="form-group">
+                        <label>上传收款码图片：</label>
+                        <input type="file" id="wechat-qrcode-upload" accept="image/*" />
+                        <img id="wechat-qrcode-preview" class="image-preview" alt="微信收款码" />
+                    </div>
+                </div>
+                
+                <!-- Visa设置 -->
+                <div class="ad-balloon-item">
+                    <h4>💳 Visa收款账户（演示）</h4>
+                    <div class="form-group">
+                        <label>收款账户名：</label>
+                        <input type="text" id="visa-account-name" placeholder="例如：ZHANG SAN" />
+                    </div>
+                    <div class="form-group">
+                        <label>收款卡号（后4位）：</label>
+                        <input type="text" id="visa-card-number" placeholder="**** **** **** 1234" />
+                    </div>
+                    <div class="warning-box">
+                        <strong>⚠️ 安全提示：</strong> 真实Visa支付需接入Stripe等支付网关！
+                    </div>
+                </div>
+                
+                <!-- Mastercard设置 -->
+                <div class="ad-balloon-item">
+                    <h4>💳 Mastercard收款账户（演示）</h4>
+                    <div class="form-group">
+                        <label>收款账户名：</label>
+                        <input type="text" id="mastercard-account-name" placeholder="例如：LI SI" />
+                    </div>
+                    <div class="form-group">
+                        <label>收款卡号（后4位）：</label>
+                        <input type="text" id="mastercard-card-number" placeholder="**** **** **** 5678" />
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn-primary" id="save-payment-settings-btn">保存支付设置</button>
+                </div>
+            </div>
+            
+            <!-- 广告管理标签页 -->
+            <div class="admin-tab-content" id="ads-content">
+                <!-- 添加新广告气球 -->
+                <div class="ad-balloon-item">
+                    <h4>➕ 添加新广告气球</h4>
+                    <div class="form-group">
+                        <label>广告词：</label>
+                        <textarea id="new-ad-text" placeholder="请输入广告词..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>广告图片：</label>
+                        <input type="file" id="new-ad-image" accept="image/*" />
+                        <img id="new-ad-image-preview" class="image-preview" alt="预览" />
+                    </div>
+                    <div class="form-group">
+                        <label>位置 X（0-800）：</label>
+                        <input type="number" id="new-ad-x" value="200" min="50" max="750" />
+                    </div>
+                    <div class="form-group">
+                        <label>位置 Y（0-600）：</label>
+                        <input type="number" id="new-ad-y" value="200" min="50" max="550" />
+                    </div>
+                    <div class="form-group">
+                        <label>图片透明度（0-1）：</label>
+                        <input type="number" id="new-ad-opacity" value="0.9" min="0" max="1" step="0.1" />
+                    </div>
+                    <button class="btn-primary" id="add-ad-balloon-btn" style="width: 100%;">添加广告气球</button>
+                </div>
+                
+                <!-- 现有广告气球列表 -->
+                <div id="ad-balloons-list">
+                    <h4 style="color: #fff; margin-bottom: 15px;">📋 现有广告气球</h4>
+                    <div id="ad-balloons-container"></div>
+                </div>
+            </div>
+            
+            <!-- 底部按钮 -->
+            <div class="btn-group" style="margin-top: 30px;">
+                <button class="btn-secondary" id="close-admin-settings-btn">关闭设置</button>
             </div>
         </div>
     </div>
@@ -668,68 +861,6 @@
                 <h4>充值0.1元复活</h4>
                 <p style="color: #aaa; font-size: 14px; margin: 5px 0;">充值1元 = 1000💎钻石 | 100🪙金币 = 1💎钻石</p>
                 <button class="revive-btn" id="revive-pay-btn">充值复活</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 支付设置弹窗（管理员） -->
-    <div id="payment-settings-modal">
-        <div class="panel-content" style="max-width: 700px;">
-            <h2>💳 支付方式设置（管理员）</h2>
-            <p style="color: #FFD700; margin-bottom: 20px;">设置您的收款信息</p>
-            
-            <!-- 支付宝收款码 -->
-            <div class="ad-balloon-item">
-                <h4>📱 支付宝收款码</h4>
-                <div class="form-group">
-                    <label>上传收款码图片：</label>
-                    <input type="file" id="alipay-qrcode-upload" accept="image/*" />
-                    <img id="alipay-qrcode-preview" class="image-preview" alt="支付宝收款码" />
-                </div>
-            </div>
-            
-            <!-- 微信收款码 -->
-            <div class="ad-balloon-item">
-                <h4>💚 微信收款码</h4>
-                <div class="form-group">
-                    <label>上传收款码图片：</label>
-                    <input type="file" id="wechat-qrcode-upload" accept="image/*" />
-                    <img id="wechat-qrcode-preview" class="image-preview" alt="微信收款码" />
-                </div>
-            </div>
-            
-            <!-- Visa收款信息 -->
-            <div class="ad-balloon-item">
-                <h4>💳 Visa收款账户</h4>
-                <div class="form-group">
-                    <label>收款账户名：</label>
-                    <input type="text" id="visa-account-name" placeholder="例如：ZHANG SAN" />
-                </div>
-                <div class="form-group">
-                    <label>收款卡号（仅显示后4位）：</label>
-                    <input type="text" id="visa-card-number" placeholder="**** **** **** 1234" />
-                </div>
-                <div class="warning-box">
-                    <strong>⚠️ 安全提示：</strong> Visa真实支付需要接入Stripe等支付网关，不应直接存储完整卡号！
-                </div>
-            </div>
-            
-            <!-- 万事达收款信息 -->
-            <div class="ad-balloon-item">
-                <h4>💳 Mastercard收款账户</h4>
-                <div class="form-group">
-                    <label>收款账户名：</label>
-                    <input type="text" id="mastercard-account-name" placeholder="例如：LI SI" />
-                </div>
-                <div class="form-group">
-                    <label>收款卡号（仅显示后4位）：</label>
-                    <input type="text" id="mastercard-card-number" placeholder="**** **** **** 5678" />
-                </div>
-            </div>
-            
-            <div class="btn-group">
-                <button class="btn-secondary" id="close-payment-settings-btn">关闭</button>
-                <button class="btn-primary" id="save-payment-settings-btn">保存设置</button>
             </div>
         </div>
     </div>
@@ -966,29 +1097,24 @@
             }
         });
         
-        // ==================== 广告位设置相关事件 ====================
+        // ==================== 统一管理员设置相关事件 ====================
         
-        // 广告位设置按钮
-        document.getElementById('admin-btn').addEventListener('click', function() {
-            document.getElementById('admin-login-modal').classList.add('show');
-            document.getElementById('admin-username').value = '';
-            document.getElementById('admin-password').value = '';
-        });
-        
-        // 取消登录
-        document.getElementById('cancel-login-btn').addEventListener('click', function() {
-            document.getElementById('admin-login-modal').classList.remove('show');
-        });
-        
-        // 确认登录
-        document.getElementById('confirm-login-btn').addEventListener('click', function() {
-            const username = document.getElementById('admin-username').value.trim();
-            const password = document.getElementById('admin-password').value;
+        // 管理员设置按钮
+        document.getElementById('admin-settings-btn').addEventListener('click', function() {
+            // 需要管理员登录
+            const username = prompt('请输入管理员账号：');
+            if (!username) return;
+            
+            const password = prompt('请输入管理员密码：');
+            if (!password) return;
             
             if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
                 isAdminLoggedIn = true;
-                document.getElementById('admin-login-modal').classList.remove('show');
-                document.getElementById('ad-panel').classList.add('show');
+                document.getElementById('admin-settings-modal').classList.add('show');
+                
+                // 加载所有设置
+                loadGameSettings();
+                loadPaymentSettings();
                 loadAdBalloons();
                 refreshAdBalloonsList();
             } else {
@@ -996,16 +1122,26 @@
             }
         });
         
-        // 登录密码回车键
-        document.getElementById('admin-password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('confirm-login-btn').click();
-            }
+        // 关闭管理员设置面板
+        document.getElementById('close-admin-settings-btn').addEventListener('click', function() {
+            document.getElementById('admin-settings-modal').classList.remove('show');
         });
         
-        // 关闭广告位管理面板
-        document.getElementById('close-panel-btn').addEventListener('click', function() {
-            document.getElementById('ad-panel').classList.remove('show');
+        // 标签页切换
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                
+                // 更新标签按钮状态
+                document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 显示对应的内容
+                document.querySelectorAll('.admin-tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabName + '-content').classList.add('active');
+            });
         });
         
         // 图片预览
@@ -1066,26 +1202,7 @@
             document.getElementById('recharge-credits-preview').textContent = '100';
         });
         
-        // ==================== 支付设置相关事件 ====================
-        
-        // 支付设置按钮
-        document.getElementById('payment-settings-btn').addEventListener('click', function() {
-            // 需要管理员登录
-            const username = prompt('请输入管理员账号：');
-            const password = prompt('请输入管理员密码：');
-            
-            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-                document.getElementById('payment-settings-modal').classList.add('show');
-                loadPaymentSettings();
-            } else {
-                alert('账号或密码错误！');
-            }
-        });
-        
-        // 关闭支付设置
-        document.getElementById('close-payment-settings-btn').addEventListener('click', function() {
-            document.getElementById('payment-settings-modal').classList.remove('show');
-        });
+        // ==================== 支付设置相关事件（已整合到统一面板） ====================
         
         // 支付宝收款码上传
         document.getElementById('alipay-qrcode-upload').addEventListener('change', function(e) {
@@ -1127,8 +1244,7 @@
             // 保存到本地存储
             localStorage.setItem('paymentSettings', JSON.stringify(paymentSettings));
             
-            alert('支付设置已保存！');
-            document.getElementById('payment-settings-modal').classList.remove('show');
+            alert('✅ 支付设置已保存！');
         });
         
         // 支付方式切换
@@ -1316,6 +1432,58 @@
         } catch (error) {
             console.error('加载支付设置失败:', error);
         }
+        
+        // ==================== 游戏参数设置功能 ====================
+        
+        // 加载游戏设置到表单
+        function loadGameSettings() {
+            document.getElementById('coin-spawn-rate').value = gameSettings.coinSpawnRate;
+            document.getElementById('coin-max-count').value = gameSettings.coinMaxCount;
+            document.getElementById('coin-lifetime').value = gameSettings.coinLifeTime;
+            document.getElementById('diamond-spawn-interval').value = gameSettings.diamondSpawnInterval;
+            document.getElementById('diamond-spawn-count').value = gameSettings.diamondSpawnCount;
+            document.getElementById('obstacle-spawn-rate').value = gameSettings.obstacleSpawnRate;
+            document.getElementById('obstacle-max-count').value = gameSettings.obstacleMaxCount;
+            document.getElementById('healthpack-interval').value = gameSettings.healthPackInterval;
+        }
+        
+        // 保存游戏参数
+        document.getElementById('save-game-params-btn').addEventListener('click', function() {
+            gameSettings.coinSpawnRate = parseFloat(document.getElementById('coin-spawn-rate').value);
+            gameSettings.coinMaxCount = parseInt(document.getElementById('coin-max-count').value);
+            gameSettings.coinLifeTime = parseInt(document.getElementById('coin-lifetime').value);
+            gameSettings.diamondSpawnInterval = parseInt(document.getElementById('diamond-spawn-interval').value);
+            gameSettings.diamondSpawnCount = parseInt(document.getElementById('diamond-spawn-count').value);
+            gameSettings.obstacleSpawnRate = parseFloat(document.getElementById('obstacle-spawn-rate').value);
+            gameSettings.obstacleMaxCount = parseInt(document.getElementById('obstacle-max-count').value);
+            gameSettings.healthPackInterval = parseInt(document.getElementById('healthpack-interval').value);
+            
+            // 保存到本地存储
+            localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
+            
+            alert('✅ 游戏参数已保存！\n\n参数将在下次生成元素时生效。');
+        });
+        
+        // 恢复默认参数
+        document.getElementById('reset-game-params-btn').addEventListener('click', function() {
+            if (!confirm('确定要恢复默认参数吗？')) return;
+            
+            gameSettings = {
+                coinSpawnRate: 0.02,
+                coinMaxCount: 20,
+                coinLifeTime: 12000,
+                diamondSpawnInterval: 100000,
+                diamondSpawnCount: 5,
+                obstacleSpawnRate: 0.01,
+                obstacleMaxCount: 5,
+                healthPackInterval: 100000
+            };
+            
+            loadGameSettings();
+            localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
+            
+            alert('✅ 已恢复默认参数！');
+        });
         
         function startGame() {
             const input = document.getElementById('player-name-input').value.trim();
