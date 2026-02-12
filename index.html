@@ -330,6 +330,128 @@
         .image-preview.show {
             display: block;
         }
+        
+        /* 死亡弹窗样式 */
+        #death-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            backdrop-filter: blur(10px);
+        }
+        #death-modal.show {
+            display: flex;
+        }
+        .death-content {
+            background: linear-gradient(135deg, #434343 0%, #000000 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(255, 0, 0, 0.5);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            border: 3px solid #FF0000;
+        }
+        .death-content h2 {
+            color: #FF0000;
+            margin: 0 0 10px 0;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 0 10px #FF0000;
+        }
+        .death-content p {
+            color: #fff;
+            margin: 10px 0 30px 0;
+            font-size: 18px;
+        }
+        .revive-option {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .revive-option h4 {
+            color: #FFD700;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .revive-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+            background: linear-gradient(135deg, #00FF00 0%, #00AA00 100%);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .revive-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 255, 0, 0.4);
+        }
+        .revive-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        /* 充值按钮样式 */
+        #recharge-btn {
+            position: fixed;
+            top: 130px;
+            right: 15px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+            transition: all 0.3s;
+            z-index: 999;
+        }
+        #recharge-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+        }
+        
+        /* 充值弹窗 */
+        #recharge-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2500;
+            backdrop-filter: blur(5px);
+        }
+        #recharge-modal.show {
+            display: flex;
+        }
+        
+        @media (max-width: 768px) {
+            #recharge-btn {
+                font-size: 12px;
+                padding: 8px 15px;
+                top: 110px;
+                right: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -338,6 +460,9 @@
     
     <!-- 广告位设置按钮 -->
     <button id="admin-btn">🎯 广告位设置</button>
+    
+    <!-- 充值按钮 -->
+    <button id="recharge-btn">💰 充值</button>
     
     <!-- 管理员登录弹窗 -->
     <div id="admin-login-modal">
@@ -412,6 +537,56 @@
         </div>
     </div>
 
+    <!-- 死亡弹窗 -->
+    <div id="death-modal">
+        <div class="death-content">
+            <div class="emoji-icon">💀</div>
+            <h2>游戏结束</h2>
+            <p>你的生命值已耗尽！</p>
+            <p style="font-size: 16px; color: #FFD700;">选择复活方式：</p>
+            
+            <div class="revive-option">
+                <h4 id="revive-credits-option">消耗100游戏分复活</h4>
+                <button class="revive-btn" id="revive-credits-btn">使用游戏分复活</button>
+            </div>
+            
+            <div class="revive-option">
+                <h4>充值0.1元复活</h4>
+                <p style="color: #aaa; font-size: 14px; margin: 5px 0;">充值1元 = 1000游戏分</p>
+                <button class="revive-btn" id="revive-pay-btn">支付宝充值复活</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 充值弹窗 -->
+    <div id="recharge-modal">
+        <div class="modal-content">
+            <div class="emoji-icon">💎</div>
+            <h2>充值中心</h2>
+            <p>1元 = 1000游戏分</p>
+            
+            <div class="form-group">
+                <label>充值金额（元）：</label>
+                <input type="number" id="recharge-amount" value="1" min="0.1" step="0.1" />
+            </div>
+            
+            <div class="form-group">
+                <p style="color: #FFD700; font-size: 18px; margin: 10px 0;">
+                    将获得：<span id="recharge-credits-preview">1000</span> 游戏分
+                </p>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-secondary" id="cancel-recharge-btn">取消</button>
+                <button class="btn-primary" id="confirm-recharge-btn">支付宝支付</button>
+            </div>
+            
+            <p style="color: #aaa; font-size: 12px; margin-top: 15px;">
+                注意：支付宝支付功能需要后端支持，当前为演示版本
+            </p>
+        </div>
+    </div>
+    
     <!-- 名字输入弹窗 -->
     <div id="name-modal">
         <div class="modal-content">
@@ -461,6 +636,13 @@
             gameStarted = true;
         } else {
             document.getElementById('change-name-btn').classList.add('hidden');
+        }
+        
+        // 从 localStorage 读取保存的游戏分
+        const savedCredits = localStorage.getItem('gameCredits');
+        if (savedCredits) {
+            gameCredits = parseInt(savedCredits) || 0;
+            console.log('📊 已加载游戏分:', gameCredits);
         }
         
         // 处理开始游戏按钮
@@ -539,6 +721,72 @@
         
         // 添加广告气球
         document.getElementById('add-ad-balloon-btn').addEventListener('click', addAdBalloon);
+        
+        // ==================== 充值和复活相关事件 ====================
+        
+        // 充值按钮
+        document.getElementById('recharge-btn').addEventListener('click', function() {
+            document.getElementById('recharge-modal').classList.add('show');
+        });
+        
+        // 取消充值
+        document.getElementById('cancel-recharge-btn').addEventListener('click', function() {
+            document.getElementById('recharge-modal').classList.remove('show');
+        });
+        
+        // 充值金额实时预览
+        document.getElementById('recharge-amount').addEventListener('input', function(e) {
+            const amount = parseFloat(e.target.value) || 0;
+            const credits = Math.floor(amount * 1000);
+            document.getElementById('recharge-credits-preview').textContent = credits;
+        });
+        
+        // 确认充值（支付宝支付）
+        document.getElementById('confirm-recharge-btn').addEventListener('click', function() {
+            const amount = parseFloat(document.getElementById('recharge-amount').value) || 0;
+            if (amount < 0.1) {
+                alert('最低充值金额为0.1元！');
+                return;
+            }
+            
+            // 这里应该调用支付宝支付接口
+            // 当前为演示版本，直接模拟充值成功
+            alert('支付宝支付功能需要后端支持。\n\n演示模式：将直接添加游戏分。\n实际应用中需要接入支付宝SDK。');
+            
+            const credits = Math.floor(amount * 1000);
+            gameCredits += credits;
+            updateCredits();
+            
+            // 保存到本地存储
+            localStorage.setItem('gameCredits', gameCredits);
+            
+            document.getElementById('recharge-modal').classList.remove('show');
+            alert('充值成功！获得 ' + credits + ' 游戏分');
+        });
+        
+        // 使用游戏分复活
+        document.getElementById('revive-credits-btn').addEventListener('click', function() {
+            if (gameCredits >= 100) {
+                gameCredits -= 100;
+                updateCredits();
+                localStorage.setItem('gameCredits', gameCredits);
+                revivePlayer('credits');
+                alert('复活成功！消耗100游戏分');
+            } else {
+                alert('游戏分不足！需要100游戏分');
+            }
+        });
+        
+        // 充值复活
+        document.getElementById('revive-pay-btn').addEventListener('click', function() {
+            // 模拟0.1元充值
+            alert('支付宝支付功能需要后端支持。\n\n演示模式：将直接复活并添加100游戏分。');
+            gameCredits += 100;
+            updateCredits();
+            localStorage.setItem('gameCredits', gameCredits);
+            revivePlayer('payment');
+            alert('充值复活成功！');
+        });
         
         function startGame() {
             const input = document.getElementById('player-name-input').value.trim();
@@ -803,6 +1051,14 @@
         let obstacles = [];                 // 障碍物数组
         let score = 0;                      // 当前分数
         let scoreText;                      // 分数显示文本
+        let healthPacks = [];               // 加血包数组
+        let playerHealth = 100;             // 玩家生命值
+        let maxHealth = 100;                // 最大生命值
+        let healthText;                     // 生命值显示文本
+        let gameCredits = 0;                // 游戏分
+        let creditsText;                    // 游戏分显示文本
+        let isDead = false;                 // 玩家是否死亡
+        let lastHealthPackSpawn = 0;        // 上次加血包生成时间
 
         // ==================== 绘制像素风热气球函数 ====================
         function drawStripedBalloon(graphics) {
@@ -1091,7 +1347,7 @@
             obstacle.setDepth(10);
             
             if (type === 'bird') {
-                // 绘制小鸟障碍物
+                // 绘制小鸟障碍物（小雷）
                 obstacle.fillStyle(0x8B4513, 1);  // 棕色
                 obstacle.fillEllipse(0, 0, 30, 20);
                 
@@ -1112,7 +1368,7 @@
                     ease: 'Sine.easeInOut'
                 });
             } else if (type === 'cloud') {
-                // 绘制雷云障碍物
+                // 绘制雷云障碍物（闪电云）
                 obstacle.fillStyle(0x666666, 1);  // 灰色云
                 obstacle.fillCircle(0, 0, 25);
                 obstacle.fillCircle(-15, 5, 20);
@@ -1134,12 +1390,73 @@
                 y: y,
                 width: 50,
                 height: 40,
-                type: type
+                type: type,
+                damaged: false  // 是否已经造成伤害
+            };
+        }
+        
+        // ==================== 创建加血包函数 ====================
+        function createHealthPack(scene, x, y) {
+            const healthPack = scene.add.graphics();
+            healthPack.x = x;
+            healthPack.y = y;
+            
+            // 绘制加血包（红十字）
+            healthPack.fillStyle(0xFF0000, 1);  // 红色
+            healthPack.fillRect(-15, -5, 30, 10);  // 横条
+            healthPack.fillRect(-5, -15, 10, 30);  // 竖条
+            
+            // 添加白色边框
+            healthPack.lineStyle(2, 0xFFFFFF, 1);
+            healthPack.strokeRect(-15, -5, 30, 10);
+            healthPack.strokeRect(-5, -15, 10, 30);
+            
+            // 设置深度
+            healthPack.setDepth(10);
+            
+            // 添加旋转动画
+            scene.tweens.add({
+                targets: healthPack,
+                angle: 360,
+                duration: 3000,
+                repeat: -1,
+                ease: 'Linear'
+            });
+            
+            // 添加上下浮动
+            scene.tweens.add({
+                targets: healthPack,
+                y: y + 15,
+                duration: 1500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            // 添加脉冲效果
+            scene.tweens.add({
+                targets: healthPack,
+                scaleX: 1.2,
+                scaleY: 1.2,
+                duration: 800,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            return {
+                graphic: healthPack,
+                x: x,
+                y: y,
+                collected: false,
+                createTime: Date.now()
             };
         }
         
         // ==================== 生成游戏元素函数 ====================
         function spawnGameElements(scene) {
+            const now = Date.now();
+            
             // 随机生成金币（最多20个）
             if (coins.length < 20 && Math.random() < 0.02) {  // 2% 概率每帧，最多20个
                 const x = Math.random() * config.width;
@@ -1157,11 +1474,24 @@
                 const obstacle = createObstacle(scene, x, y, type);
                 obstacles.push(obstacle);
             }
+            
+            // 每100秒生成2个加血包
+            if (now - lastHealthPackSpawn > 100000 && healthPacks.length < 2) {
+                // 生成2个加血包
+                for (let i = 0; i < 2; i++) {
+                    const x = Math.random() * (config.width - 100) + 50;
+                    const y = Math.random() * (config.height - 100) + 50;
+                    const pack = createHealthPack(scene, x, y);
+                    healthPacks.push(pack);
+                    console.log('💊 加血包生成，位置:', x, y);
+                }
+                lastHealthPackSpawn = now;
+            }
         }
         
         // ==================== 碰撞检测函数 ====================
         function checkCollisions() {
-            if (!balloon) return;
+            if (!balloon || isDead) return;
             
             // 检测金币碰撞
             coins.forEach((coin, index) => {
@@ -1176,7 +1506,9 @@
                     // 收集金币
                     coin.collected = true;
                     score += 10;
+                    gameCredits += 1;  // 每个金币给1游戏分
                     updateScore();
+                    updateCredits();
                     
                     // 金币消失动画
                     gameScene.tweens.add({
@@ -1191,30 +1523,87 @@
                     });
                     
                     // 播放音效（文字提示）
-                    showFloatingText(gameScene, balloon.x, balloon.y - 50, '+10', 0x00FF00);
+                    showFloatingText(gameScene, balloon.x, balloon.y - 50, '+10 +1分', 0x00FF00);
                 }
             });
             
             // 检测障碍物碰撞
             obstacles.forEach(obstacle => {
+                if (obstacle.damaged) return;  // 已经造成过伤害，跳过
+                
                 const distance = Phaser.Math.Distance.Between(
                     balloon.x, balloon.y,
                     obstacle.x, obstacle.graphic.y
                 );
                 
                 if (distance < 60) {  // 碰撞半径
-                    // 减速效果
-                    score = Math.max(0, score - 5);
-                    updateScore();
+                    obstacle.damaged = true;  // 标记为已造成伤害
+                    
+                    // 根据障碍物类型减少生命值
+                    let damage = 0;
+                    if (obstacle.type === 'cloud') {
+                        // 雷云造成10点伤害
+                        damage = 10;
+                        playerHealth = Math.max(0, playerHealth - 10);
+                        showFloatingText(gameScene, balloon.x, balloon.y - 50, '-10 HP', 0xFF0000);
+                    } else if (obstacle.type === 'bird') {
+                        // 小鸟造成5点伤害
+                        damage = 5;
+                        playerHealth = Math.max(0, playerHealth - 5);
+                        showFloatingText(gameScene, balloon.x, balloon.y - 50, '-5 HP', 0xFF6B6B);
+                    }
+                    
+                    updateHealth();
                     
                     // 震动效果
                     gameScene.cameras.main.shake(200, 0.01);
                     
-                    showFloatingText(gameScene, balloon.x, balloon.y - 50, '-5', 0xFF0000);
+                    // 检查是否死亡
+                    if (playerHealth <= 0) {
+                        handlePlayerDeath();
+                    }
                     
                     // 障碍物消失
-                    obstacle.graphic.destroy();
-                    obstacles.splice(obstacles.indexOf(obstacle), 1);
+                    setTimeout(() => {
+                        if (obstacle.graphic && !obstacle.graphic.destroyed) {
+                            obstacle.graphic.destroy();
+                        }
+                        const idx = obstacles.indexOf(obstacle);
+                        if (idx !== -1) {
+                            obstacles.splice(idx, 1);
+                        }
+                    }, 100);
+                }
+            });
+            
+            // 检测加血包碰撞
+            healthPacks.forEach((pack, index) => {
+                if (pack.collected) return;
+                
+                const distance = Phaser.Math.Distance.Between(
+                    balloon.x, balloon.y,
+                    pack.x, pack.graphic.y
+                );
+                
+                if (distance < 40) {  // 碰撞半径
+                    // 收集加血包
+                    pack.collected = true;
+                    playerHealth = Math.min(maxHealth, playerHealth + 20);
+                    updateHealth();
+                    
+                    // 加血包消失动画
+                    gameScene.tweens.add({
+                        targets: pack.graphic,
+                        alpha: 0,
+                        scale: 2,
+                        duration: 300,
+                        onComplete: () => {
+                            pack.graphic.destroy();
+                            healthPacks.splice(index, 1);
+                        }
+                    });
+                    
+                    showFloatingText(gameScene, balloon.x, balloon.y - 50, '+20 HP', 0x00FF00);
                 }
             });
         }
@@ -1243,6 +1632,61 @@
             if (scoreText) {
                 scoreText.setText('🪙 ' + score);
             }
+        }
+        
+        // ==================== 更新生命值显示 ====================
+        function updateHealth() {
+            if (healthText) {
+                const healthPercent = (playerHealth / maxHealth) * 100;
+                let color = '#00FF00';  // 绿色
+                if (healthPercent < 30) {
+                    color = '#FF0000';  // 红色
+                } else if (healthPercent < 60) {
+                    color = '#FFA500';  // 橙色
+                }
+                
+                healthText.setText('❤️ ' + playerHealth + '/' + maxHealth);
+                healthText.setStyle({ color: color });
+            }
+        }
+        
+        // ==================== 更新游戏分显示 ====================
+        function updateCredits() {
+            if (creditsText) {
+                creditsText.setText('💎 ' + gameCredits + '分');
+            }
+        }
+        
+        // ==================== 玩家死亡处理 ====================
+        function handlePlayerDeath() {
+            if (isDead) return;
+            
+            isDead = true;
+            console.log('💀 玩家死亡');
+            
+            // 显示死亡弹窗
+            document.getElementById('death-modal').classList.add('show');
+            
+            // 更新复活选项显示
+            document.getElementById('revive-credits-option').textContent = 
+                gameCredits >= 100 ? '消耗100游戏分复活 ✓' : '消耗100游戏分复活（不足）';
+            
+            if (gameCredits >= 100) {
+                document.getElementById('revive-credits-btn').disabled = false;
+            } else {
+                document.getElementById('revive-credits-btn').disabled = true;
+            }
+        }
+        
+        // ==================== 复活玩家 ====================
+        function revivePlayer(method) {
+            isDead = false;
+            playerHealth = 100;
+            updateHealth();
+            
+            document.getElementById('death-modal').classList.remove('show');
+            
+            console.log('✨ 玩家复活，方式:', method);
         }
 
         // ==================== 创建白云函数 ====================
@@ -1395,21 +1839,56 @@
                 20, 20,
                 '🪙 0',
                 {
-                    fontSize: '24px',
+                    fontSize: '20px',
                     fontFamily: 'Inter, sans-serif',
                     color: '#FFD700',
                     backgroundColor: '#00000099',
-                    padding: { x: 15, y: 8 },
+                    padding: { x: 12, y: 6 },
                     fontStyle: 'bold'
                 }
             );
             scoreText.setScrollFactor(0);
             scoreText.setDepth(1000);
+            
+            // ---------- 创建生命值显示 ----------
+            healthText = scene.add.text(
+                20, 55,
+                '❤️ 100/100',
+                {
+                    fontSize: '20px',
+                    fontFamily: 'Inter, sans-serif',
+                    color: '#00FF00',
+                    backgroundColor: '#00000099',
+                    padding: { x: 12, y: 6 },
+                    fontStyle: 'bold'
+                }
+            );
+            healthText.setScrollFactor(0);
+            healthText.setDepth(1000);
+            
+            // ---------- 创建游戏分显示 ----------
+            creditsText = scene.add.text(
+                20, 90,
+                '💎 0分',
+                {
+                    fontSize: '20px',
+                    fontFamily: 'Inter, sans-serif',
+                    color: '#00FFFF',
+                    backgroundColor: '#00000099',
+                    padding: { x: 12, y: 6 },
+                    fontStyle: 'bold'
+                }
+            );
+            creditsText.setScrollFactor(0);
+            creditsText.setDepth(1000);
 
             // 设置初始目标位置为当前位置
             targetX = balloon.x;
             targetY = balloon.y;
             previousX = balloon.x;
+            
+            // 初始化加血包生成时间
+            lastHealthPackSpawn = Date.now();
 
             // ---------- 添加点击事件监听 ----------
             scene.input.on('pointerdown', function(pointer) {
@@ -1574,6 +2053,11 @@
                 return;
             }
             
+            if (!playerName) {
+                console.warn('⚠️ 玩家名字未设置，跳过位置更新');
+                return;
+            }
+            
             try {
                 const { error } = await supabaseClient
                     .from('balloon_positions')
@@ -1589,6 +2073,8 @@
                 
                 if (error) {
                     console.error('❌ 发送位置失败:', error.message);
+                } else {
+                    console.log('✅ 位置已发送:', playerName, x, y);
                 }
             } catch (err) {
                 console.error('❌ 发送位置异常:', err);
@@ -1643,26 +2129,39 @@
         function handleRealtimeUpdate(scene, payload) {
             const { eventType, new: newRecord, old: oldRecord } = payload;
             
+            // 确保使用全局的gameScene，而不是传入的scene参数
+            const actualScene = gameScene || scene;
+            
+            if (!actualScene) {
+                console.warn('⚠️ 场景未初始化，忽略实时更新');
+                return;
+            }
+            
             if (eventType === 'INSERT' || eventType === 'UPDATE') {
                 const data = newRecord;
                 
                 // 忽略自己的更新
-                if (data.player_id === playerId) return;
+                if (data.player_id === playerId) {
+                    console.log('🔄 收到自己的位置更新，忽略');
+                    return;
+                }
                 
-                console.log('📡 收到其他玩家位置:', data.player_name, data.x, data.y);
+                console.log('📡 收到其他玩家位置:', data.player_name, data.x, data.y, 'PlayerId:', data.player_id);
                 
                 // 如果是新玩家，创建气球
                 if (!otherPlayers[data.player_id]) {
-                    otherPlayers[data.player_id] = createOtherPlayerBalloon(scene, {
+                    console.log('🎈 创建新玩家气球:', data.player_name);
+                    otherPlayers[data.player_id] = createOtherPlayerBalloon(actualScene, {
                         x: data.x,
                         y: data.y,
                         name: data.player_name
                     });
-                    console.log('🎈 新玩家加入:', data.player_name);
+                    console.log('✅ 新玩家加入成功:', data.player_name, '当前其他玩家数:', Object.keys(otherPlayers).length);
                 } else {
                     // 更新现有玩家的目标位置
                     otherPlayers[data.player_id].targetX = data.x;
                     otherPlayers[data.player_id].targetY = data.y;
+                    console.log('🔄 更新玩家位置:', data.player_name, data.x, data.y);
                 }
                 
                 // 更新最后活跃时间
@@ -1850,10 +2349,21 @@
             
             obstacles = obstacles.filter(obstacle => {
                 const outOfBounds = obstacle.x < -100 || obstacle.x > config.width + 100;
-                if (outOfBounds && obstacle.graphic) {
+                if (outOfBounds && obstacle.graphic && !obstacle.graphic.destroyed) {
                     obstacle.graphic.destroy();
                 }
                 return !outOfBounds;
+            });
+            
+            // 清理已收集的加血包
+            healthPacks = healthPacks.filter(pack => {
+                if (pack.collected) return false;
+                
+                const isDestroyed = !pack.graphic || pack.graphic.destroyed;
+                if (isDestroyed && pack.graphic && !pack.graphic.destroyed) {
+                    pack.graphic.destroy();
+                }
+                return !isDestroyed;
             });
             
             // ---------- 更新其他玩家的气球 ----------
