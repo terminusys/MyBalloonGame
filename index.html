@@ -680,6 +680,12 @@
                         <input type="number" id="diamond-spawn-count" min="1" max="10" value="5">
                     </div>
                     <div class="setting-hint">每次生成的钻石道具数量</div>
+                    
+                    <div class="setting-item">
+                        <label>最大数量</label>
+                        <input type="number" id="diamond-max-count" min="1" max="20" value="5">
+                    </div>
+                    <div class="setting-hint">屏幕上同时存在的钻石道具数量上限</div>
                 </div>
                 
                 <!-- 障碍物设置 -->
@@ -1003,12 +1009,13 @@
         // ==================== 游戏元素生成参数 ====================
         let gameSettings = {
             coinSpawnRate: 0.02,        // 金币生成概率（每帧）
-            coinMaxCount: 20,           // 金币最大数量
+            coinMaxCount: 15,           // 金币最大数量（改为15个）
             coinLifeTime: 12000,        // 金币存在时间（毫秒）
             diamondSpawnInterval: 100000, // 钻石生成间隔（毫秒）100秒
-            diamondSpawnCount: 5,       // 每次生成钻石数量
-            obstacleSpawnRate: 0.003,   // 障碍物生成概率（降低到0.003，减少初始障碍物）
-            obstacleMaxCount: 3,        // 障碍物最大数量（降低到3个）
+            diamondSpawnCount: 5,       // 每次生成钻石数量（钻石道具最大5个）
+            diamondMaxCount: 5,         // 钻石道具最大数量（新增）
+            obstacleSpawnRate: 0.005,   // 障碍物生成概率（提高到0.005）
+            obstacleMaxCount: 6,        // 障碍物最大数量（改为6个）
             healthPackInterval: 100000  // 加血包生成间隔（毫秒）
         };
         
@@ -1251,6 +1258,9 @@
                     content.classList.remove('active');
                 });
                 document.getElementById(method + '-payment').classList.add('active');
+                
+                // 切换支付方式时更新收款码显示
+                updateRechargeQRCodes();
             });
         });
         
@@ -1432,6 +1442,7 @@
             document.getElementById('coin-lifetime').value = gameSettings.coinLifeTime;
             document.getElementById('diamond-spawn-interval').value = gameSettings.diamondSpawnInterval;
             document.getElementById('diamond-spawn-count').value = gameSettings.diamondSpawnCount;
+            document.getElementById('diamond-max-count').value = gameSettings.diamondMaxCount || 5;
             document.getElementById('obstacle-spawn-rate').value = gameSettings.obstacleSpawnRate;
             document.getElementById('obstacle-max-count').value = gameSettings.obstacleMaxCount;
             document.getElementById('healthpack-interval').value = gameSettings.healthPackInterval;
@@ -1444,6 +1455,7 @@
             gameSettings.coinLifeTime = parseInt(document.getElementById('coin-lifetime').value);
             gameSettings.diamondSpawnInterval = parseInt(document.getElementById('diamond-spawn-interval').value);
             gameSettings.diamondSpawnCount = parseInt(document.getElementById('diamond-spawn-count').value);
+            gameSettings.diamondMaxCount = parseInt(document.getElementById('diamond-max-count').value);
             gameSettings.obstacleSpawnRate = parseFloat(document.getElementById('obstacle-spawn-rate').value);
             gameSettings.obstacleMaxCount = parseInt(document.getElementById('obstacle-max-count').value);
             gameSettings.healthPackInterval = parseInt(document.getElementById('healthpack-interval').value);
@@ -1451,7 +1463,7 @@
             // 保存到本地存储
             localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
             
-            alert('✅ 游戏参数已保存！\n\n参数将在下次生成元素时生效。');
+            alert('✅ 游戏参数已保存！\n\n参数将在下次生成元素时生效。\n\n💡 提示：所有使用此浏览器的玩家都将使用这些配置。');
         });
         
         // 恢复默认参数
@@ -1460,19 +1472,20 @@
             
             gameSettings = {
                 coinSpawnRate: 0.02,
-                coinMaxCount: 20,
+                coinMaxCount: 15,           // 金币最大15个
                 coinLifeTime: 12000,
                 diamondSpawnInterval: 100000,
-                diamondSpawnCount: 5,
-                obstacleSpawnRate: 0.01,
-                obstacleMaxCount: 5,
+                diamondSpawnCount: 5,       // 每次生成5个钻石
+                diamondMaxCount: 5,         // 钻石最大5个
+                obstacleSpawnRate: 0.005,   // 障碍物生成概率
+                obstacleMaxCount: 6,        // 障碍物最大6个（闪电云+小鸟）
                 healthPackInterval: 100000
             };
             
             loadGameSettings();
             localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
             
-            alert('✅ 已恢复默认参数！');
+            alert('✅ 已恢复默认参数！\n\n新的默认值：\n🪙 金币最多15个\n💎 钻石道具最多5个\n⚡ 障碍物最多6个');
         });
         
         function startGame() {
@@ -2231,7 +2244,18 @@
             const now = Date.now();
             
             // 随机生成金币（使用配置参数）
-            if (coins.length < gameSettings.coinMaxCount && Math.random() < gameSettings.coinSpawnRate) {
+            if (Math.random() < gameSettings.coinSpawnRate) {
+                // 如果达到上限，随机删除一个旧的金币
+                if (coins.length >= gameSettings.coinMaxCount) {
+                    const randomIndex = Math.floor(Math.random() * coins.length);
+                    const oldCoin = coins[randomIndex];
+                    if (oldCoin.graphic && !oldCoin.graphic.destroyed) {
+                        oldCoin.graphic.destroy();
+                    }
+                    coins.splice(randomIndex, 1);
+                    console.log('🗑️ 删除旧金币，为新金币腾出空间');
+                }
+                
                 const x = Math.random() * config.width;
                 const y = Math.random() * config.height;
                 const coin = createCoin(scene, x, y);
@@ -2240,7 +2264,18 @@
             }
             
             // 随机生成障碍物（使用配置参数）
-            if (Math.random() < gameSettings.obstacleSpawnRate && obstacles.length < gameSettings.obstacleMaxCount) {
+            if (Math.random() < gameSettings.obstacleSpawnRate) {
+                // 如果达到上限，随机删除一个旧的障碍物
+                if (obstacles.length >= gameSettings.obstacleMaxCount) {
+                    const randomIndex = Math.floor(Math.random() * obstacles.length);
+                    const oldObstacle = obstacles[randomIndex];
+                    if (oldObstacle.graphic && !oldObstacle.graphic.destroyed) {
+                        oldObstacle.graphic.destroy();
+                    }
+                    obstacles.splice(randomIndex, 1);
+                    console.log('🗑️ 删除旧障碍物，为新障碍物腾出空间');
+                }
+                
                 const x = Math.random() * config.width;
                 const y = Math.random() * (config.height * 0.7) + 50;
                 const type = Math.random() > 0.5 ? 'bird' : 'cloud';
@@ -2261,10 +2296,21 @@
                 lastHealthPackSpawn = now;
             }
             
-            // 每100秒生成5个钻石道具（使用配置参数）
+            // 每100秒生成钻石道具（使用配置参数）
             if (now - lastDiamondSpawn > gameSettings.diamondSpawnInterval) {
-                // 生成5个钻石
+                // 生成指定数量的钻石
                 for (let i = 0; i < gameSettings.diamondSpawnCount; i++) {
+                    // 如果达到上限，随机删除一个旧的钻石道具
+                    if (diamondItems.length >= gameSettings.diamondMaxCount) {
+                        const randomIndex = Math.floor(Math.random() * diamondItems.length);
+                        const oldDiamond = diamondItems[randomIndex];
+                        if (oldDiamond.graphic && !oldDiamond.graphic.destroyed) {
+                            oldDiamond.graphic.destroy();
+                        }
+                        diamondItems.splice(randomIndex, 1);
+                        console.log('🗑️ 删除旧钻石道具，为新钻石腾出空间');
+                    }
+                    
                     const x = Math.random() * (config.width - 100) + 50;
                     const y = Math.random() * (config.height - 100) + 50;
                     const diamondItem = createDiamondItem(scene, x, y);
