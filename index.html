@@ -1243,6 +1243,7 @@
         };
         
         // ==================== 全局游戏数据 ====================
+        let currentUserId = null;           // 当前登录用户的ID
         let gameDiamonds = 0;               // 钻石（游戏积分）
         let totalCoinsCollected = 0;        // 累计收集的金币数
         
@@ -1311,8 +1312,6 @@
         console.log('⚙️ 游戏设置将在登录后从 Supabase 加载');
         
         // ==================== 用户登录和注册系统 ====================
-        
-        let currentUserId = null;  // 当前登录用户的ID
         
         // 登录按钮
         document.getElementById('login-btn').addEventListener('click', handleLogin);
