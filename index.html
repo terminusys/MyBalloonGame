@@ -444,6 +444,117 @@
             display: flex;
         }
         
+        /* 支付方式按钮 */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .payment-btn {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .payment-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        .payment-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+        .payment-content {
+            display: none;
+            margin-top: 20px;
+        }
+        .payment-content.active {
+            display: block;
+        }
+        .qrcode-container {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .qrcode-container img {
+            max-width: 250px;
+            max-height: 250px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+        }
+        .qrcode-placeholder {
+            width: 250px;
+            height: 250px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            border-radius: 10px;
+            color: #999;
+        }
+        .card-input-group {
+            margin: 15px 0;
+        }
+        .card-input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-top: 8px;
+        }
+        .card-input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .card-input-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+        }
+        .warning-box {
+            background: rgba(255, 152, 0, 0.2);
+            border: 2px solid #FF9800;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #FFE0B2;
+        }
+        .warning-box strong {
+            color: #FFA726;
+        }
+        
+        /* 管理员支付设置弹窗 */
+        #payment-settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2500;
+            backdrop-filter: blur(5px);
+            overflow-y: auto;
+        }
+        #payment-settings-modal.show {
+            display: flex;
+        }
+        
         @media (max-width: 768px) {
             #recharge-btn {
                 font-size: 12px;
@@ -460,6 +571,9 @@
     
     <!-- 广告位设置按钮 -->
     <button id="admin-btn">🎯 广告位设置</button>
+    
+    <!-- 支付设置按钮（管理员） -->
+    <button id="payment-settings-btn" style="position: fixed; top: 95px; left: 15px; padding: 10px 18px; background: linear-gradient(135deg, #FF6B6B 0%, #C92A2A 100%); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4); transition: all 0.3s; z-index: 999;">💳 支付设置</button>
     
     <!-- 充值按钮 -->
     <button id="recharge-btn">💰 充值</button>
@@ -558,9 +672,71 @@
         </div>
     </div>
     
+    <!-- 支付设置弹窗（管理员） -->
+    <div id="payment-settings-modal">
+        <div class="panel-content" style="max-width: 700px;">
+            <h2>💳 支付方式设置（管理员）</h2>
+            <p style="color: #FFD700; margin-bottom: 20px;">设置您的收款信息</p>
+            
+            <!-- 支付宝收款码 -->
+            <div class="ad-balloon-item">
+                <h4>📱 支付宝收款码</h4>
+                <div class="form-group">
+                    <label>上传收款码图片：</label>
+                    <input type="file" id="alipay-qrcode-upload" accept="image/*" />
+                    <img id="alipay-qrcode-preview" class="image-preview" alt="支付宝收款码" />
+                </div>
+            </div>
+            
+            <!-- 微信收款码 -->
+            <div class="ad-balloon-item">
+                <h4>💚 微信收款码</h4>
+                <div class="form-group">
+                    <label>上传收款码图片：</label>
+                    <input type="file" id="wechat-qrcode-upload" accept="image/*" />
+                    <img id="wechat-qrcode-preview" class="image-preview" alt="微信收款码" />
+                </div>
+            </div>
+            
+            <!-- Visa收款信息 -->
+            <div class="ad-balloon-item">
+                <h4>💳 Visa收款账户</h4>
+                <div class="form-group">
+                    <label>收款账户名：</label>
+                    <input type="text" id="visa-account-name" placeholder="例如：ZHANG SAN" />
+                </div>
+                <div class="form-group">
+                    <label>收款卡号（仅显示后4位）：</label>
+                    <input type="text" id="visa-card-number" placeholder="**** **** **** 1234" />
+                </div>
+                <div class="warning-box">
+                    <strong>⚠️ 安全提示：</strong> Visa真实支付需要接入Stripe等支付网关，不应直接存储完整卡号！
+                </div>
+            </div>
+            
+            <!-- 万事达收款信息 -->
+            <div class="ad-balloon-item">
+                <h4>💳 Mastercard收款账户</h4>
+                <div class="form-group">
+                    <label>收款账户名：</label>
+                    <input type="text" id="mastercard-account-name" placeholder="例如：LI SI" />
+                </div>
+                <div class="form-group">
+                    <label>收款卡号（仅显示后4位）：</label>
+                    <input type="text" id="mastercard-card-number" placeholder="**** **** **** 5678" />
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-secondary" id="close-payment-settings-btn">关闭</button>
+                <button class="btn-primary" id="save-payment-settings-btn">保存设置</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- 充值弹窗 -->
     <div id="recharge-modal">
-        <div class="modal-content">
+        <div class="panel-content" style="max-width: 600px;">
             <div class="emoji-icon">💎</div>
             <h2>充值中心</h2>
             <p>1元 = 1000游戏分</p>
@@ -576,14 +752,112 @@
                 </p>
             </div>
             
-            <div class="btn-group">
-                <button class="btn-secondary" id="cancel-recharge-btn">取消</button>
-                <button class="btn-primary" id="confirm-recharge-btn">支付宝支付</button>
+            <!-- 支付方式选择 -->
+            <div class="form-group">
+                <label>选择支付方式：</label>
+                <div class="payment-methods">
+                    <button class="payment-btn active" data-method="alipay">
+                        📱 支付宝
+                    </button>
+                    <button class="payment-btn" data-method="wechat">
+                        💚 微信支付
+                    </button>
+                    <button class="payment-btn" data-method="visa">
+                        💳 Visa
+                    </button>
+                    <button class="payment-btn" data-method="mastercard">
+                        💳 Mastercard
+                    </button>
+                </div>
             </div>
             
-            <p style="color: #aaa; font-size: 12px; margin-top: 15px;">
-                注意：支付宝支付功能需要后端支持，当前为演示版本
-            </p>
+            <!-- 支付宝支付内容 -->
+            <div class="payment-content active" id="alipay-payment">
+                <h4 style="color: #1677FF; margin-bottom: 10px;">支付宝扫码支付</h4>
+                <div class="qrcode-container" id="alipay-qrcode-display">
+                    <div class="qrcode-placeholder">请管理员先设置收款码</div>
+                </div>
+                <div class="warning-box">
+                    <strong>⚠️ 支付流程：</strong><br>
+                    1. 扫码支付对应金额<br>
+                    2. 支付成功后点击下方"已完成支付"<br>
+                    3. 等待管理员确认充值
+                </div>
+                <button class="btn-primary" style="width: 100%;" id="alipay-confirm-btn">✅ 已完成支付</button>
+            </div>
+            
+            <!-- 微信支付内容 -->
+            <div class="payment-content" id="wechat-payment">
+                <h4 style="color: #07C160; margin-bottom: 10px;">微信扫码支付</h4>
+                <div class="qrcode-container" id="wechat-qrcode-display">
+                    <div class="qrcode-placeholder">请管理员先设置收款码</div>
+                </div>
+                <div class="warning-box">
+                    <strong>⚠️ 支付流程：</strong><br>
+                    1. 扫码支付对应金额<br>
+                    2. 支付成功后点击下方"已完成支付"<br>
+                    3. 等待管理员确认充值
+                </div>
+                <button class="btn-primary" style="width: 100%;" id="wechat-confirm-btn">✅ 已完成支付</button>
+            </div>
+            
+            <!-- Visa支付内容 -->
+            <div class="payment-content" id="visa-payment">
+                <h4 style="color: #1A1F71; margin-bottom: 10px;">Visa卡支付</h4>
+                <div class="warning-box">
+                    <strong>⚠️ 演示模式：</strong> 真实Visa支付需要接入Stripe等支付网关，需要后端服务器支持。当前为界面演示。
+                </div>
+                <div class="card-input-group">
+                    <label>卡号</label>
+                    <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" id="visa-card-input" />
+                </div>
+                <div class="card-input-row">
+                    <div class="card-input-group">
+                        <label>有效期</label>
+                        <input type="text" placeholder="MM/YY" maxlength="5" />
+                    </div>
+                    <div class="card-input-group">
+                        <label>CVV</label>
+                        <input type="text" placeholder="123" maxlength="3" />
+                    </div>
+                </div>
+                <div class="card-input-group">
+                    <label>持卡人姓名</label>
+                    <input type="text" placeholder="ZHANG SAN" />
+                </div>
+                <button class="btn-primary" style="width: 100%;" id="visa-pay-btn">💳 支付（演示）</button>
+            </div>
+            
+            <!-- Mastercard支付内容 -->
+            <div class="payment-content" id="mastercard-payment">
+                <h4 style="color: #EB001B; margin-bottom: 10px;">Mastercard支付</h4>
+                <div class="warning-box">
+                    <strong>⚠️ 演示模式：</strong> 真实Mastercard支付需要接入Stripe等支付网关，需要后端服务器支持。当前为界面演示。
+                </div>
+                <div class="card-input-group">
+                    <label>卡号</label>
+                    <input type="text" placeholder="5678 1234 5678 9012" maxlength="19" id="mastercard-card-input" />
+                </div>
+                <div class="card-input-row">
+                    <div class="card-input-group">
+                        <label>有效期</label>
+                        <input type="text" placeholder="MM/YY" maxlength="5" />
+                    </div>
+                    <div class="card-input-group">
+                        <label>CVV</label>
+                        <input type="text" placeholder="123" maxlength="3" />
+                    </div>
+                </div>
+                <div class="card-input-group">
+                    <label>持卡人姓名</label>
+                    <input type="text" placeholder="LI SI" />
+                </div>
+                <button class="btn-primary" style="width: 100%;" id="mastercard-pay-btn">💳 支付（演示）</button>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn-secondary" id="cancel-recharge-btn">关闭</button>
+            </div>
         </div>
     </div>
     
@@ -741,29 +1015,6 @@
             document.getElementById('recharge-credits-preview').textContent = credits;
         });
         
-        // 确认充值（支付宝支付）
-        document.getElementById('confirm-recharge-btn').addEventListener('click', function() {
-            const amount = parseFloat(document.getElementById('recharge-amount').value) || 0;
-            if (amount < 0.1) {
-                alert('最低充值金额为0.1元！');
-                return;
-            }
-            
-            // 这里应该调用支付宝支付接口
-            // 当前为演示版本，直接模拟充值成功
-            alert('支付宝支付功能需要后端支持。\n\n演示模式：将直接添加游戏分。\n实际应用中需要接入支付宝SDK。');
-            
-            const credits = Math.floor(amount * 1000);
-            gameCredits += credits;
-            updateCredits();
-            
-            // 保存到本地存储
-            localStorage.setItem('gameCredits', gameCredits);
-            
-            document.getElementById('recharge-modal').classList.remove('show');
-            alert('充值成功！获得 ' + credits + ' 游戏分');
-        });
-        
         // 使用游戏分复活
         document.getElementById('revive-credits-btn').addEventListener('click', function() {
             if (gameCredits >= 100) {
@@ -779,14 +1030,263 @@
         
         // 充值复活
         document.getElementById('revive-pay-btn').addEventListener('click', function() {
-            // 模拟0.1元充值
-            alert('支付宝支付功能需要后端支持。\n\n演示模式：将直接复活并添加100游戏分。');
-            gameCredits += 100;
+            // 打开充值弹窗，设置金额为0.1元
+            document.getElementById('death-modal').classList.remove('show');
+            document.getElementById('recharge-modal').classList.add('show');
+            document.getElementById('recharge-amount').value = '0.1';
+            document.getElementById('recharge-credits-preview').textContent = '100';
+        });
+        
+        // ==================== 支付设置相关事件 ====================
+        
+        // 支付设置按钮
+        document.getElementById('payment-settings-btn').addEventListener('click', function() {
+            // 需要管理员登录
+            const username = prompt('请输入管理员账号：');
+            const password = prompt('请输入管理员密码：');
+            
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                document.getElementById('payment-settings-modal').classList.add('show');
+                loadPaymentSettings();
+            } else {
+                alert('账号或密码错误！');
+            }
+        });
+        
+        // 关闭支付设置
+        document.getElementById('close-payment-settings-btn').addEventListener('click', function() {
+            document.getElementById('payment-settings-modal').classList.remove('show');
+        });
+        
+        // 支付宝收款码上传
+        document.getElementById('alipay-qrcode-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('alipay-qrcode-preview');
+                    preview.src = event.target.result;
+                    preview.classList.add('show');
+                    paymentSettings.alipayQRCode = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // 微信收款码上传
+        document.getElementById('wechat-qrcode-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('wechat-qrcode-preview');
+                    preview.src = event.target.result;
+                    preview.classList.add('show');
+                    paymentSettings.wechatQRCode = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // 保存支付设置
+        document.getElementById('save-payment-settings-btn').addEventListener('click', function() {
+            paymentSettings.visaAccountName = document.getElementById('visa-account-name').value;
+            paymentSettings.visaCardNumber = document.getElementById('visa-card-number').value;
+            paymentSettings.mastercardAccountName = document.getElementById('mastercard-account-name').value;
+            paymentSettings.mastercardCardNumber = document.getElementById('mastercard-card-number').value;
+            
+            // 保存到本地存储
+            localStorage.setItem('paymentSettings', JSON.stringify(paymentSettings));
+            
+            alert('支付设置已保存！');
+            document.getElementById('payment-settings-modal').classList.remove('show');
+        });
+        
+        // 支付方式切换
+        document.querySelectorAll('.payment-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const method = this.getAttribute('data-method');
+                
+                // 更新按钮状态
+                document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 显示对应的支付内容
+                document.querySelectorAll('.payment-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(method + '-payment').classList.add('active');
+            });
+        });
+        
+        // 支付宝确认支付
+        document.getElementById('alipay-confirm-btn').addEventListener('click', function() {
+            const amount = parseFloat(document.getElementById('recharge-amount').value) || 0;
+            if (amount < 0.1) {
+                alert('最低充值金额为0.1元！');
+                return;
+            }
+            
+            alert('收到您的支付通知！\n\n请等待管理员确认充值。\n确认后游戏分将自动到账。\n\n演示模式：将直接充值成功。');
+            
+            const credits = Math.floor(amount * 1000);
+            gameCredits += credits;
             updateCredits();
             localStorage.setItem('gameCredits', gameCredits);
-            revivePlayer('payment');
-            alert('充值复活成功！');
+            
+            document.getElementById('recharge-modal').classList.remove('show');
+            alert('充值成功！获得 ' + credits + ' 游戏分');
+            
+            // 如果是从死亡界面来的复活充值
+            if (isDead && amount === 0.1) {
+                revivePlayer('alipay');
+            }
         });
+        
+        // 微信确认支付
+        document.getElementById('wechat-confirm-btn').addEventListener('click', function() {
+            const amount = parseFloat(document.getElementById('recharge-amount').value) || 0;
+            if (amount < 0.1) {
+                alert('最低充值金额为0.1元！');
+                return;
+            }
+            
+            alert('收到您的支付通知！\n\n请等待管理员确认充值。\n确认后游戏分将自动到账。\n\n演示模式：将直接充值成功。');
+            
+            const credits = Math.floor(amount * 1000);
+            gameCredits += credits;
+            updateCredits();
+            localStorage.setItem('gameCredits', gameCredits);
+            
+            document.getElementById('recharge-modal').classList.remove('show');
+            alert('充值成功！获得 ' + credits + ' 游戏分');
+            
+            // 如果是从死亡界面来的复活充值
+            if (isDead && amount === 0.1) {
+                revivePlayer('wechat');
+            }
+        });
+        
+        // Visa支付
+        document.getElementById('visa-pay-btn').addEventListener('click', function() {
+            const cardNumber = document.getElementById('visa-card-input').value;
+            const amount = parseFloat(document.getElementById('recharge-amount').value) || 0;
+            
+            if (!cardNumber || cardNumber.length < 16) {
+                alert('请输入完整的卡号！');
+                return;
+            }
+            
+            if (amount < 0.1) {
+                alert('最低充值金额为0.1元！');
+                return;
+            }
+            
+            alert('⚠️ 演示模式提示：\n\n真实Visa支付需要：\n1. 接入Stripe/PayPal支付网关\n2. 后端服务器处理支付\n3. PCI DSS安全认证\n\n当前将模拟支付成功。');
+            
+            const credits = Math.floor(amount * 1000);
+            gameCredits += credits;
+            updateCredits();
+            localStorage.setItem('gameCredits', gameCredits);
+            
+            document.getElementById('recharge-modal').classList.remove('show');
+            alert('充值成功！获得 ' + credits + ' 游戏分');
+            
+            if (isDead && amount === 0.1) {
+                revivePlayer('visa');
+            }
+        });
+        
+        // Mastercard支付
+        document.getElementById('mastercard-pay-btn').addEventListener('click', function() {
+            const cardNumber = document.getElementById('mastercard-card-input').value;
+            const amount = parseFloat(document.getElementById('recharge-amount').value) || 0;
+            
+            if (!cardNumber || cardNumber.length < 16) {
+                alert('请输入完整的卡号！');
+                return;
+            }
+            
+            if (amount < 0.1) {
+                alert('最低充值金额为0.1元！');
+                return;
+            }
+            
+            alert('⚠️ 演示模式提示：\n\n真实Mastercard支付需要：\n1. 接入Stripe/PayPal支付网关\n2. 后端服务器处理支付\n3. PCI DSS安全认证\n\n当前将模拟支付成功。');
+            
+            const credits = Math.floor(amount * 1000);
+            gameCredits += credits;
+            updateCredits();
+            localStorage.setItem('gameCredits', gameCredits);
+            
+            document.getElementById('recharge-modal').classList.remove('show');
+            alert('充值成功！获得 ' + credits + ' 游戏分');
+            
+            if (isDead && amount === 0.1) {
+                revivePlayer('mastercard');
+            }
+        });
+        
+        // 加载支付设置
+        function loadPaymentSettings() {
+            try {
+                const saved = localStorage.getItem('paymentSettings');
+                if (saved) {
+                    paymentSettings = JSON.parse(saved);
+                    
+                    // 恢复收款码
+                    if (paymentSettings.alipayQRCode) {
+                        const preview = document.getElementById('alipay-qrcode-preview');
+                        preview.src = paymentSettings.alipayQRCode;
+                        preview.classList.add('show');
+                    }
+                    
+                    if (paymentSettings.wechatQRCode) {
+                        const preview = document.getElementById('wechat-qrcode-preview');
+                        preview.src = paymentSettings.wechatQRCode;
+                        preview.classList.add('show');
+                    }
+                    
+                    // 恢复卡号信息
+                    document.getElementById('visa-account-name').value = paymentSettings.visaAccountName || '';
+                    document.getElementById('visa-card-number').value = paymentSettings.visaCardNumber || '';
+                    document.getElementById('mastercard-account-name').value = paymentSettings.mastercardAccountName || '';
+                    document.getElementById('mastercard-card-number').value = paymentSettings.mastercardCardNumber || '';
+                }
+            } catch (error) {
+                console.error('加载支付设置失败:', error);
+            }
+        }
+        
+        // 更新充值弹窗中的收款码显示
+        function updateRechargeQRCodes() {
+            // 更新支付宝收款码
+            const alipayDisplay = document.getElementById('alipay-qrcode-display');
+            if (paymentSettings.alipayQRCode) {
+                alipayDisplay.innerHTML = '<img src="' + paymentSettings.alipayQRCode + '" alt="支付宝收款码" />';
+            } else {
+                alipayDisplay.innerHTML = '<div class="qrcode-placeholder">请管理员先设置收款码</div>';
+            }
+            
+            // 更新微信收款码
+            const wechatDisplay = document.getElementById('wechat-qrcode-display');
+            if (paymentSettings.wechatQRCode) {
+                wechatDisplay.innerHTML = '<img src="' + paymentSettings.wechatQRCode + '" alt="微信收款码" />';
+            } else {
+                wechatDisplay.innerHTML = '<div class="qrcode-placeholder">请管理员先设置收款码</div>';
+            }
+        }
+        
+        // 页面加载时读取支付设置
+        try {
+            const saved = localStorage.getItem('paymentSettings');
+            if (saved) {
+                paymentSettings = JSON.parse(saved);
+                updateRechargeQRCodes();
+            }
+        } catch (error) {
+            console.error('加载支付设置失败:', error);
+        }
         
         function startGame() {
             const input = document.getElementById('player-name-input').value.trim();
@@ -1059,6 +1559,16 @@
         let creditsText;                    // 游戏分显示文本
         let isDead = false;                 // 玩家是否死亡
         let lastHealthPackSpawn = 0;        // 上次加血包生成时间
+        
+        // ==================== 支付设置数据 ====================
+        let paymentSettings = {
+            alipayQRCode: null,
+            wechatQRCode: null,
+            visaAccountName: '',
+            visaCardNumber: '',
+            mastercardAccountName: '',
+            mastercardCardNumber: ''
+        };
 
         // ==================== 绘制像素风热气球函数 ====================
         function drawStripedBalloon(graphics) {
