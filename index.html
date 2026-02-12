@@ -348,6 +348,13 @@
         let otherPlayers = {};              // 存储其他玩家的气球对象
         let lastUpdateTime = 0;             // 上次发送位置更新的时间
         const UPDATE_INTERVAL = 100;        // 位置更新间隔（毫秒）
+        
+        // 游戏元素
+        let coins = [];                     // 金币数组
+        let obstacles = [];                 // 障碍物数组
+        let score = 0;                      // 当前分数
+        let scoreText;                      // 分数显示文本
+        let gameScene;                      // 游戏场景引用
 
         // ==================== 绘制像素风热气球函数 ====================
         function drawStripedBalloon(graphics) {
@@ -424,6 +431,213 @@
             // 绘制篮子边框
             graphics.lineStyle(2, 0x5A3A1A, 1);
             graphics.strokeRect(-15, 0, 30, 20);
+        }
+
+        // ==================== 创建金币函数 ====================
+        function createCoin(scene, x, y) {
+            const coin = scene.add.graphics();
+            coin.x = x;
+            coin.y = y;
+            
+            // 绘制金币（圆形，金黄色）
+            coin.fillStyle(0xFFD700, 1);  // 金色
+            coin.fillCircle(0, 0, 15);
+            
+            // 添加内圈
+            coin.fillStyle(0xFFA500, 1);  // 橙色
+            coin.fillCircle(0, 0, 10);
+            
+            // 添加光泽
+            coin.fillStyle(0xFFFFAA, 1);
+            coin.fillCircle(-4, -4, 4);
+            
+            // 添加旋转动画
+            scene.tweens.add({
+                targets: coin,
+                scaleX: 0.2,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            // 添加上下浮动
+            scene.tweens.add({
+                targets: coin,
+                y: y + 10,
+                duration: 2000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            return {
+                graphic: coin,
+                x: x,
+                y: y,
+                radius: 15,
+                collected: false
+            };
+        }
+        
+        // ==================== 创建障碍物函数 ====================
+        function createObstacle(scene, x, y, type) {
+            const obstacle = scene.add.graphics();
+            obstacle.x = x;
+            obstacle.y = y;
+            
+            if (type === 'bird') {
+                // 绘制小鸟障碍物
+                obstacle.fillStyle(0x8B4513, 1);  // 棕色
+                obstacle.fillEllipse(0, 0, 30, 20);
+                
+                obstacle.fillStyle(0xFFFFFF, 1);  // 白色翅膀
+                obstacle.fillEllipse(-15, 0, 15, 8);
+                obstacle.fillEllipse(15, 0, 15, 8);
+                
+                obstacle.fillStyle(0xFF6B6B, 1);  // 红色
+                obstacle.fillTriangle(-8, 0, -12, 2, -8, 4);
+                
+                // 飞行动画
+                scene.tweens.add({
+                    targets: obstacle,
+                    y: y + 20,
+                    duration: 1500,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
+            } else if (type === 'cloud') {
+                // 绘制雷云障碍物
+                obstacle.fillStyle(0x666666, 1);  // 灰色云
+                obstacle.fillCircle(0, 0, 25);
+                obstacle.fillCircle(-15, 5, 20);
+                obstacle.fillCircle(15, 5, 20);
+                
+                // 闪电效果
+                obstacle.lineStyle(3, 0xFFFF00, 1);
+                obstacle.beginPath();
+                obstacle.moveTo(0, 20);
+                obstacle.lineTo(-5, 30);
+                obstacle.lineTo(0, 30);
+                obstacle.lineTo(-5, 40);
+                obstacle.strokePath();
+            }
+            
+            return {
+                graphic: obstacle,
+                x: x,
+                y: y,
+                width: 50,
+                height: 40,
+                type: type
+            };
+        }
+        
+        // ==================== 生成游戏元素函数 ====================
+        function spawnGameElements(scene) {
+            // 随机生成金币
+            if (Math.random() < 0.02) {  // 2% 概率每帧
+                const x = Math.random() * config.width;
+                const y = Math.random() * config.height;
+                const coin = createCoin(scene, x, y);
+                coins.push(coin);
+            }
+            
+            // 随机生成障碍物
+            if (Math.random() < 0.01 && obstacles.length < 5) {  // 1% 概率，最多5个
+                const x = Math.random() * config.width;
+                const y = Math.random() * (config.height * 0.7) + 50;
+                const type = Math.random() > 0.5 ? 'bird' : 'cloud';
+                const obstacle = createObstacle(scene, x, y, type);
+                obstacles.push(obstacle);
+            }
+        }
+        
+        // ==================== 碰撞检测函数 ====================
+        function checkCollisions() {
+            if (!balloon) return;
+            
+            // 检测金币碰撞
+            coins.forEach((coin, index) => {
+                if (coin.collected) return;
+                
+                const distance = Phaser.Math.Distance.Between(
+                    balloon.x, balloon.y,
+                    coin.x, coin.graphic.y
+                );
+                
+                if (distance < 40) {  // 碰撞半径
+                    // 收集金币
+                    coin.collected = true;
+                    score += 10;
+                    updateScore();
+                    
+                    // 金币消失动画
+                    gameScene.tweens.add({
+                        targets: coin.graphic,
+                        alpha: 0,
+                        scale: 2,
+                        duration: 300,
+                        onComplete: () => {
+                            coin.graphic.destroy();
+                            coins.splice(index, 1);
+                        }
+                    });
+                    
+                    // 播放音效（文字提示）
+                    showFloatingText(gameScene, balloon.x, balloon.y - 50, '+10', 0x00FF00);
+                }
+            });
+            
+            // 检测障碍物碰撞
+            obstacles.forEach(obstacle => {
+                const distance = Phaser.Math.Distance.Between(
+                    balloon.x, balloon.y,
+                    obstacle.x, obstacle.graphic.y
+                );
+                
+                if (distance < 60) {  // 碰撞半径
+                    // 减速效果
+                    score = Math.max(0, score - 5);
+                    updateScore();
+                    
+                    // 震动效果
+                    gameScene.cameras.main.shake(200, 0.01);
+                    
+                    showFloatingText(gameScene, balloon.x, balloon.y - 50, '-5', 0xFF0000);
+                    
+                    // 障碍物消失
+                    obstacle.graphic.destroy();
+                    obstacles.splice(obstacles.indexOf(obstacle), 1);
+                }
+            });
+        }
+        
+        // ==================== 显示浮动文字函数 ====================
+        function showFloatingText(scene, x, y, text, color) {
+            const floatText = scene.add.text(x, y, text, {
+                fontSize: '24px',
+                fontFamily: 'Inter, sans-serif',
+                color: '#' + color.toString(16).padStart(6, '0'),
+                fontStyle: 'bold'
+            });
+            floatText.setOrigin(0.5, 0.5);
+            
+            scene.tweens.add({
+                targets: floatText,
+                y: y - 50,
+                alpha: 0,
+                duration: 1000,
+                onComplete: () => floatText.destroy()
+            });
+        }
+        
+        // ==================== 更新分数显示 ====================
+        function updateScore() {
+            if (scoreText) {
+                scoreText.setText('🪙 ' + score);
+            }
         }
 
         // ==================== 创建白云函数 ====================
@@ -564,6 +778,22 @@
             
             // 保存到全局变量，用于更改名字时更新
             playerNameTextObject = playerNameText;
+
+            // ---------- 创建分数显示 ----------
+            scoreText = scene.add.text(
+                20, 20,
+                '🪙 0',
+                {
+                    fontSize: '24px',
+                    fontFamily: 'Inter, sans-serif',
+                    color: '#FFD700',
+                    backgroundColor: '#00000099',
+                    padding: { x: 15, y: 8 },
+                    fontStyle: 'bold'
+                }
+            );
+            scoreText.setScrollFactor(0);
+            scoreText.setDepth(1000);
 
             // 设置初始目标位置为当前位置
             targetX = balloon.x;
@@ -975,6 +1205,31 @@
 
             // 应用缩放效果（模拟热气球的"呼吸"）
             balloon.setScale(breatheScale);
+            
+            // ---------- 生成游戏元素 ----------
+            spawnGameElements(this);
+            
+            // ---------- 检测碰撞 ----------
+            checkCollisions();
+            
+            // ---------- 清理超出屏幕的元素 ----------
+            coins = coins.filter(coin => {
+                if (coin.collected) return false;
+                const outOfBounds = coin.x < -50 || coin.x > config.width + 50 || 
+                                   coin.y < -50 || coin.y > config.height + 50;
+                if (outOfBounds && coin.graphic) {
+                    coin.graphic.destroy();
+                }
+                return !outOfBounds;
+            });
+            
+            obstacles = obstacles.filter(obstacle => {
+                const outOfBounds = obstacle.x < -100 || obstacle.x > config.width + 100;
+                if (outOfBounds && obstacle.graphic) {
+                    obstacle.graphic.destroy();
+                }
+                return !outOfBounds;
+            });
             
             // ---------- 更新其他玩家的气球 ----------
             for (const playerId in otherPlayers) {
