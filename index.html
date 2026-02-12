@@ -68,6 +68,17 @@
                 transform: translateY(0);
             }
         }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 6px 25px rgba(102, 126, 234, 0.8);
+            }
+        }
         .modal-content h2 {
             color: #fff;
             margin: 0 0 10px 0;
@@ -1171,9 +1182,11 @@
     <div id="game-container"></div>
     
     <!-- 背景音乐 -->
-    <audio id="bg-music" loop>
-        <!-- 超级玛丽主题曲 - 使用可靠的CDN -->
-        <source src="https://www.soundjay.com/misc/sounds/magic-chime-02.mp3" type="audio/mpeg">
+    <audio id="bg-music" loop preload="auto" crossorigin="anonymous">
+        <!-- 超级玛丽主题曲 - 使用多个备用源 -->
+        <source src="https://github.com/justinvforvendetta/8bit-game-music/raw/master/Super%20Mario%20Bros%20-%20Overworld.mp3" type="audio/mpeg">
+        <source src="https://cdn.freesound.org/previews/100/100828_1234560-lq.mp3" type="audio/mpeg">
+        <source src="https://www.myinstants.com/media/sounds/super-mario-bros.mp3" type="audio/mpeg">
     </audio>
     
     <!-- 音乐控制按钮 -->
@@ -1560,31 +1573,72 @@
         const musicToggleBtn = document.getElementById('music-toggle-btn');
         let isMusicPlaying = false;
         
+        // 监听音频加载状态
+        bgMusic.addEventListener('loadeddata', function() {
+            console.log('✅ 音频文件加载成功');
+        });
+        
+        bgMusic.addEventListener('error', function(e) {
+            console.error('❌ 音频加载失败:', e);
+            console.error('❌ 错误详情:', bgMusic.error);
+            // 尝试切换到下一个音源
+            const sources = bgMusic.querySelectorAll('source');
+            const currentSrc = bgMusic.currentSrc;
+            console.log('❌ 当前失败的音源:', currentSrc);
+            console.log('💡 提示：如果所有音源都失败，请考虑上传本地音乐文件');
+        });
+        
+        bgMusic.addEventListener('canplay', function() {
+            console.log('✅ 音频可以播放了');
+        });
+        
         // 尝试自动播放背景音乐
         function tryAutoPlayMusic() {
-            bgMusic.play().then(() => {
-                isMusicPlaying = true;
-                musicToggleBtn.innerHTML = '🔊';
-                console.log('🎵 背景音乐开始播放');
-            }).catch(error => {
-                console.log('⚠️ 自动播放被浏览器阻止，请用户手动点击开启音乐');
-                isMusicPlaying = false;
-                musicToggleBtn.innerHTML = '🔇';
-            });
+            console.log('🎵 尝试播放背景音乐...');
+            console.log('🎵 音频当前源:', bgMusic.currentSrc);
+            
+            // 先加载音频
+            bgMusic.load();
+            
+            // 等待一会再播放
+            setTimeout(() => {
+                bgMusic.play().then(() => {
+                    isMusicPlaying = true;
+                    musicToggleBtn.innerHTML = '🔊';
+                    console.log('✅ 背景音乐播放成功！');
+                }).catch(error => {
+                    console.warn('⚠️ 自动播放被浏览器阻止:', error.message);
+                    console.warn('💡 请点击右下角的音乐按钮手动开启音乐');
+                    isMusicPlaying = false;
+                    musicToggleBtn.innerHTML = '🔇';
+                    // 添加闪烁效果提示用户
+                    musicToggleBtn.style.animation = 'pulse 1s infinite';
+                });
+            }, 500);
         }
         
         // 音乐控制按钮
         musicToggleBtn.addEventListener('click', function() {
+            // 移除闪烁动画
+            musicToggleBtn.style.animation = 'none';
+            
             if (isMusicPlaying) {
                 bgMusic.pause();
                 musicToggleBtn.innerHTML = '🔇';
                 isMusicPlaying = false;
                 console.log('🔇 背景音乐已暂停');
             } else {
-                bgMusic.play();
-                musicToggleBtn.innerHTML = '🔊';
-                isMusicPlaying = true;
-                console.log('🔊 背景音乐已播放');
+                console.log('🎵 用户点击播放音乐');
+                console.log('🎵 当前音源:', bgMusic.currentSrc);
+                
+                bgMusic.play().then(() => {
+                    musicToggleBtn.innerHTML = '🔊';
+                    isMusicPlaying = true;
+                    console.log('✅ 背景音乐开始播放！');
+                }).catch(error => {
+                    console.error('❌ 播放失败:', error.message);
+                    alert('❌ 音乐播放失败：' + error.message + '\n\n💡 可能原因：\n1. 音频文件无法加载\n2. 浏览器限制\n3. 网络问题\n\n建议上传本地音乐文件');
+                });
             }
         });
         
