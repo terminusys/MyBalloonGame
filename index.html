@@ -3324,17 +3324,17 @@
 
         // ==================== 创建场景函数 ====================
         function create() {
-            // 保存场景对象引用
-            gameScene = this;
-            
             console.log('🎮 Phaser 场景创建完成');
             console.log('📍 gameStarted 状态:', gameStarted);
             console.log('👤 playerName:', playerName);
             
+            // ⚠️ 重要：无论游戏是否开始，都要保存场景引用！
+            gameScene = this;
+            
             // 如果游戏还未开始（用户未输入名字），等待
             if (!gameStarted) {
-                console.log('⏳ 等待玩家输入名字...');
-                // 使用事件监听等待游戏开始
+                console.log('⏳ 等待玩家登录后初始化游戏...');
+                // 场景已保存，等待startGameAfterLogin调用initializeGame
                 return;
             }
             
