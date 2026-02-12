@@ -2248,37 +2248,39 @@
                     return false;
                 }
 
-                if (data) {
+                if (data && data.settings) {
+                    const s = data.settings; // 从settings字段读取
+                    
                     // 更新游戏设置
                     gameSettings = {
-                        coinSpawnRate: parseFloat(data.coin_spawn_rate),
-                        coinMaxCount: parseInt(data.coin_max_count),
-                        coinLifeTime: parseInt(data.coin_lifetime),
-                        diamondSpawnInterval: parseInt(data.diamond_spawn_interval),
-                        diamondSpawnCount: parseInt(data.diamond_spawn_count),
-                        diamondMaxCount: parseInt(data.diamond_max_count),
-                        obstacleSpawnRate: parseFloat(data.obstacle_spawn_rate),
-                        obstacleMaxCount: parseInt(data.obstacle_max_count),
-                        healthPackInterval: parseInt(data.health_pack_interval),
-                        healthPackCount: parseInt(data.health_pack_count),
-                        healthPackLifetime: parseInt(data.health_pack_lifetime)
+                        coinSpawnRate: parseFloat(s.coinSpawnRate) || 0.02,
+                        coinMaxCount: parseInt(s.coinMaxCount) || 15,
+                        coinLifeTime: parseInt(s.coinLifeTime) || 12000,
+                        diamondSpawnInterval: parseInt(s.diamondSpawnInterval) || 100000,
+                        diamondSpawnCount: parseInt(s.diamondSpawnCount) || 5,
+                        diamondMaxCount: parseInt(s.diamondMaxCount) || 5,
+                        obstacleSpawnRate: parseFloat(s.obstacleSpawnRate) || 0.005,
+                        obstacleMaxCount: parseInt(s.obstacleMaxCount) || 6,
+                        healthPackInterval: parseInt(s.healthPackInterval) || 100000,
+                        healthPackSpawnCount: parseInt(s.healthPackSpawnCount) || 2,
+                        healthPackLifeTime: parseInt(s.healthPackLifeTime) || 8000
                     };
                     
                     // 更新广告气球
-                    if (data.ad_balloons) {
-                        adBalloons = data.ad_balloons;
+                    if (s.adBalloons) {
+                        adBalloons = s.adBalloons;
                         console.log('📢 加载了', adBalloons.length, '个广告气球');
                     }
                     
                     // 更新支付设置
-                    if (data.payment_settings) {
+                    if (s.paymentSettings) {
                         paymentSettings = {
-                            alipayQRCode: data.payment_settings.alipayQRCode || null,
-                            wechatQRCode: data.payment_settings.wechatQRCode || null,
-                            visaAccountName: data.payment_settings.visaAccount || '',
-                            visaCardNumber: data.payment_settings.visaCardLast4 || '',
-                            mastercardAccountName: data.payment_settings.mastercardAccount || '',
-                            mastercardCardNumber: data.payment_settings.mastercardCardLast4 || ''
+                            alipayQRCode: s.paymentSettings.alipayQRCode || null,
+                            wechatQRCode: s.paymentSettings.wechatQRCode || null,
+                            visaAccountName: s.paymentSettings.visaAccountName || '',
+                            visaCardNumber: s.paymentSettings.visaCardNumber || '',
+                            mastercardAccountName: s.paymentSettings.mastercardAccountName || '',
+                            mastercardCardNumber: s.paymentSettings.mastercardCardNumber || ''
                         };
                         console.log('💳 加载了支付设置');
                     }
@@ -2310,28 +2312,29 @@
                 const { data, error } = await supabaseClient
                     .from('global_game_settings')
                     .update({
-                        coin_spawn_rate: gameSettings.coinSpawnRate,
-                        coin_max_count: gameSettings.coinMaxCount,
-                        coin_lifetime: gameSettings.coinLifeTime,
-                        diamond_spawn_interval: gameSettings.diamondSpawnInterval,
-                        diamond_spawn_count: gameSettings.diamondSpawnCount,
-                        diamond_max_count: gameSettings.diamondMaxCount,
-                        obstacle_spawn_rate: gameSettings.obstacleSpawnRate,
-                        obstacle_max_count: gameSettings.obstacleMaxCount,
-                        health_pack_interval: gameSettings.healthPackInterval,
-                        health_pack_count: gameSettings.healthPackCount,
-                        health_pack_lifetime: gameSettings.healthPackLifetime,
-                        ad_balloons: adBalloons,
-                        payment_settings: {
-                            alipayQRCode: paymentSettings.alipayQRCode,
-                            wechatQRCode: paymentSettings.wechatQRCode,
-                            visaAccount: paymentSettings.visaAccountName,
-                            visaCardLast4: paymentSettings.visaCardNumber,
-                            mastercardAccount: paymentSettings.mastercardAccountName,
-                            mastercardCardLast4: paymentSettings.mastercardCardNumber
+                        settings: {
+                            coinSpawnRate: gameSettings.coinSpawnRate,
+                            coinMaxCount: gameSettings.coinMaxCount,
+                            coinLifeTime: gameSettings.coinLifeTime,
+                            diamondSpawnInterval: gameSettings.diamondSpawnInterval,
+                            diamondSpawnCount: gameSettings.diamondSpawnCount,
+                            diamondMaxCount: gameSettings.diamondMaxCount,
+                            obstacleSpawnRate: gameSettings.obstacleSpawnRate,
+                            obstacleMaxCount: gameSettings.obstacleMaxCount,
+                            healthPackInterval: gameSettings.healthPackInterval,
+                            healthPackSpawnCount: gameSettings.healthPackSpawnCount,
+                            healthPackLifeTime: gameSettings.healthPackLifeTime,
+                            paymentSettings: {
+                                alipayQRCode: paymentSettings.alipayQRCode,
+                                wechatQRCode: paymentSettings.wechatQRCode,
+                                visaAccountName: paymentSettings.visaAccountName,
+                                visaCardNumber: paymentSettings.visaCardNumber,
+                                mastercardAccountName: paymentSettings.mastercardAccountName,
+                                mastercardCardNumber: paymentSettings.mastercardCardNumber
+                            },
+                            adBalloons: adBalloons
                         },
-                        updated_at: new Date().toISOString(),
-                        updated_by: playerName || 'admin'
+                        updated_at: new Date().toISOString()
                     })
                     .eq('id', 'default');
 
