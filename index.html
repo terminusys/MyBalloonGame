@@ -621,6 +621,9 @@
     <!-- 更改名字按钮 -->
     <button id="change-name-btn">👤 更改名字</button>
     
+    <!-- 退出登录按钮 -->
+    <button id="logout-btn" style="position: fixed; top: 15px; right: 15px; padding: 8px 15px; background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; z-index: 999;">🚪 退出登录</button>
+    
     <!-- 统一管理员设置按钮 -->
     <button id="admin-settings-btn" style="position: fixed; top: 55px; left: 15px; padding: 10px 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s; z-index: 999;">⚙️ 管理员设置</button>
     
@@ -1059,6 +1062,16 @@
             document.getElementById('player-name-input').select();
         });
         
+        // 处理退出登录按钮
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            if (confirm('确定要退出登录吗？\n\n这将清除保存的玩家名称，下次访问需要重新输入。')) {
+                // 清除保存的玩家名称
+                localStorage.removeItem('balloonPlayerName');
+                // 刷新页面
+                location.reload();
+            }
+        });
+        
         // 处理回车键
         document.getElementById('player-name-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -1185,6 +1198,9 @@
                     preview.src = event.target.result;
                     preview.classList.add('show');
                     paymentSettings.alipayQRCode = event.target.result;
+                    // 立即保存到本地存储
+                    localStorage.setItem('paymentSettings', JSON.stringify(paymentSettings));
+                    console.log('✅ 支付宝收款码已上传并保存');
                 };
                 reader.readAsDataURL(file);
             }
@@ -1200,6 +1216,9 @@
                     preview.src = event.target.result;
                     preview.classList.add('show');
                     paymentSettings.wechatQRCode = event.target.result;
+                    // 立即保存到本地存储
+                    localStorage.setItem('paymentSettings', JSON.stringify(paymentSettings));
+                    console.log('✅ 微信收款码已上传并保存');
                 };
                 reader.readAsDataURL(file);
             }
@@ -3148,6 +3167,11 @@
             
             // ---------- 检测碰撞 ----------
             checkCollisions();
+            
+            // ---------- 检查生命值（每帧检查，防止遗漏）----------
+            if (!isDead && playerHealth <= 0) {
+                handlePlayerDeath();
+            }
             
             // ---------- 清理超出屏幕的元素和过期金币 ----------
             const now = Date.now();
