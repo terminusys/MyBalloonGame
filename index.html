@@ -710,7 +710,19 @@
                         <label>生成间隔（毫秒）</label>
                         <input type="number" id="healthpack-interval" min="30000" max="300000" step="10000" value="100000">
                     </div>
-                    <div class="setting-hint">每次生成加血包的时间间隔</div>
+                    <div class="setting-hint">每次生成加血包的时间间隔（推荐60000-120000）</div>
+                    
+                    <div class="setting-item">
+                        <label>每次生成数量</label>
+                        <input type="number" id="healthpack-count" min="1" max="10" value="2">
+                    </div>
+                    <div class="setting-hint">每次生成的加血包数量（默认2个）</div>
+                    
+                    <div class="setting-item">
+                        <label>停留时间（毫秒）</label>
+                        <input type="number" id="healthpack-lifetime" min="3000" max="30000" step="1000" value="8000">
+                    </div>
+                    <div class="setting-hint">加血包在界面上停留的时间（默认8秒）</div>
                 </div>
                 
                 <div class="btn-group">
@@ -1016,7 +1028,9 @@
             diamondMaxCount: 5,         // 钻石道具最大数量（新增）
             obstacleSpawnRate: 0.005,   // 障碍物生成概率（提高到0.005）
             obstacleMaxCount: 6,        // 障碍物最大数量（改为6个）
-            healthPackInterval: 100000  // 加血包生成间隔（毫秒）
+            healthPackInterval: 100000, // 加血包生成间隔（毫秒）
+            healthPackCount: 2,         // 每次生成加血包数量（新增）
+            healthPackLifetime: 8000    // 加血包停留时间（毫秒，新增）
         };
         
         // ==================== 全局游戏数据 ====================
@@ -1446,6 +1460,8 @@
             document.getElementById('obstacle-spawn-rate').value = gameSettings.obstacleSpawnRate;
             document.getElementById('obstacle-max-count').value = gameSettings.obstacleMaxCount;
             document.getElementById('healthpack-interval').value = gameSettings.healthPackInterval;
+            document.getElementById('healthpack-count').value = gameSettings.healthPackCount || 2;
+            document.getElementById('healthpack-lifetime').value = gameSettings.healthPackLifetime || 8000;
         }
         
         // 保存游戏参数
@@ -1459,6 +1475,8 @@
             gameSettings.obstacleSpawnRate = parseFloat(document.getElementById('obstacle-spawn-rate').value);
             gameSettings.obstacleMaxCount = parseInt(document.getElementById('obstacle-max-count').value);
             gameSettings.healthPackInterval = parseInt(document.getElementById('healthpack-interval').value);
+            gameSettings.healthPackCount = parseInt(document.getElementById('healthpack-count').value);
+            gameSettings.healthPackLifetime = parseInt(document.getElementById('healthpack-lifetime').value);
             
             // 保存到本地存储
             localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
@@ -1479,13 +1497,15 @@
                 diamondMaxCount: 5,         // 钻石最大5个
                 obstacleSpawnRate: 0.005,   // 障碍物生成概率
                 obstacleMaxCount: 6,        // 障碍物最大6个（闪电云+小鸟）
-                healthPackInterval: 100000
+                healthPackInterval: 100000,
+                healthPackCount: 2,         // 每次生成2个加血包
+                healthPackLifetime: 8000    // 加血包停留8秒
             };
             
             loadGameSettings();
             localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
             
-            alert('✅ 已恢复默认参数！\n\n新的默认值：\n🪙 金币最多15个\n💎 钻石道具最多5个\n⚡ 障碍物最多6个');
+            alert('✅ 已恢复默认参数！\n\n新的默认值：\n🪙 金币最多15个\n💎 钻石道具最多5个\n⚡ 障碍物最多6个\n💊 加血包每次2个，停留8秒');
         });
         
         function startGame() {
@@ -2283,10 +2303,10 @@
                 obstacles.push(obstacle);
             }
             
-            // 每100秒生成2个加血包（使用配置参数）
-            if (now - lastHealthPackSpawn > gameSettings.healthPackInterval && healthPacks.length < 2) {
-                // 生成2个加血包
-                for (let i = 0; i < 2; i++) {
+            // 按配置的间隔生成加血包（使用配置参数）
+            if (now - lastHealthPackSpawn > gameSettings.healthPackInterval && healthPacks.length < gameSettings.healthPackCount) {
+                // 生成配置数量的加血包
+                for (let i = 0; i < gameSettings.healthPackCount; i++) {
                     const x = Math.random() * (config.width - 100) + 50;
                     const y = Math.random() * (config.height - 100) + 50;
                     const pack = createHealthPack(scene, x, y);
@@ -2446,12 +2466,13 @@
             healthPacks.forEach((pack, index) => {
                 if (pack.collected) return;
                 
+                // 修复：使用graphic的x和y（因为有动画，位置会变化）
                 const distance = Phaser.Math.Distance.Between(
                     balloon.x, balloon.y,
-                    pack.x, pack.graphic.y
+                    pack.graphic.x, pack.graphic.y
                 );
                 
-                if (distance < 40) {  // 碰撞半径
+                if (distance < 50) {  // 增大碰撞半径，更容易收集
                     // 收集加血包
                     pack.collected = true;
                     playerHealth = Math.min(maxHealth, playerHealth + 20);
@@ -2470,6 +2491,7 @@
                     });
                     
                     showFloatingText(gameScene, balloon.x, balloon.y - 50, '+20 HP', 0x00FF00);
+                    console.log('💊 收集加血包！当前生命值:', playerHealth);
                 }
             });
         }
@@ -3255,15 +3277,36 @@
                 return !outOfBounds;
             });
             
-            // 清理已收集的加血包
+            // 清理已收集的加血包和过期加血包
             healthPacks = healthPacks.filter(pack => {
                 if (pack.collected) return false;
                 
-                const isDestroyed = !pack.graphic || pack.graphic.destroyed;
-                if (isDestroyed && pack.graphic && !pack.graphic.destroyed) {
-                    pack.graphic.destroy();
+                // 检查是否超过停留时间
+                const isExpired = (now - pack.createTime) > gameSettings.healthPackLifetime;
+                
+                // 超过停留时间的前1秒开始闪烁警告
+                const timeRemaining = gameSettings.healthPackLifetime - (now - pack.createTime);
+                if (timeRemaining > 0 && timeRemaining < 1000 && !pack.flashing) {
+                    pack.flashing = true;
+                    // 添加闪烁动画
+                    gameScene.tweens.add({
+                        targets: pack.graphic,
+                        alpha: 0.3,
+                        duration: 250,
+                        yoyo: true,
+                        repeat: -1
+                    });
                 }
-                return !isDestroyed;
+                
+                const isDestroyed = !pack.graphic || pack.graphic.destroyed;
+                
+                if ((isExpired || isDestroyed) && pack.graphic && !pack.graphic.destroyed) {
+                    pack.graphic.destroy();
+                    if (isExpired) {
+                        console.log('💊 加血包超时消失');
+                    }
+                }
+                return !isExpired && !isDestroyed;
             });
             
             // ---------- 更新其他玩家的气球 ----------
@@ -3291,6 +3334,60 @@
                 // 添加呼吸效果
                 container.y += breatheY * 0.3;
                 container.setScale(breatheScale * 0.95);  // 其他玩家稍微小一点
+            }
+            
+            // ---------- 检测玩家之间的碰撞 ----------
+            if (balloon && !isDead) {
+                for (const playerId in otherPlayers) {
+                    const player = otherPlayers[playerId];
+                    const container = player.container;
+                    
+                    // 计算两个气球之间的距离
+                    const dx = balloon.x - container.x;
+                    const dy = balloon.y - container.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // 如果距离小于碰撞半径（两个气球的半径之和）
+                    const collisionRadius = 80; // 两个气球的碰撞半径
+                    
+                    if (distance < collisionRadius) {
+                        // 计算碰撞法向量
+                        const normalX = dx / distance;
+                        const normalY = dy / distance;
+                        
+                        // 计算重叠距离
+                        const overlap = collisionRadius - distance;
+                        
+                        // 将当前玩家的气球推开（物理碰撞效果）
+                        const pushForce = overlap * 0.5;
+                        targetX = balloon.x + normalX * pushForce;
+                        targetY = balloon.y + normalY * pushForce;
+                        
+                        // 限制在屏幕范围内
+                        targetX = Phaser.Math.Clamp(targetX, 30, config.width - 30);
+                        targetY = Phaser.Math.Clamp(targetY, 30, config.height - 30);
+                        
+                        // 添加视觉反馈（轻微震动）
+                        if (!player.collisionCooldown) {
+                            gameScene.tweens.add({
+                                targets: balloon,
+                                x: balloon.x + (Math.random() - 0.5) * 5,
+                                y: balloon.y + (Math.random() - 0.5) * 5,
+                                duration: 50,
+                                yoyo: true,
+                                repeat: 1
+                            });
+                            
+                            // 添加碰撞冷却时间，避免频繁触发
+                            player.collisionCooldown = true;
+                            setTimeout(() => {
+                                player.collisionCooldown = false;
+                            }, 500);
+                            
+                            console.log('💥 与玩家', player.name, '发生碰撞！');
+                        }
+                    }
+                }
             }
             
             // ---------- 更新广告气球的晃动效果 ----------
