@@ -1360,28 +1360,35 @@
             try {
                 console.log('🔐 尝试登录，用户名:', username);
                 
-                // 从Supabase查询用户
+                // 从Supabase查询用户（不使用single，避免406错误）
                 const { data, error } = await supabaseClient
                     .from('game_users')
                     .select('*')
                     .eq('username', username)
-                    .eq('password', password)  // 注意：生产环境应该使用加密密码
-                    .single();
+                    .eq('password', password);  // 注意：生产环境应该使用加密密码
                 
                 if (error) {
-                    console.error('❌ 登录失败:', error);
+                    console.error('❌ 数据库查询错误:', error);
+                    alert('❌ 登录失败：数据库连接错误！\n' + error.message);
+                    return;
+                }
+                
+                if (!data || data.length === 0) {
+                    console.error('❌ 未找到匹配的用户');
                     alert('❌ 登录失败：用户名或密码错误！');
                     return;
                 }
                 
-                if (data) {
-                    console.log('✅ 登录成功！用户:', data);
+                // 获取第一个匹配的用户
+                const user = data[0];
+                if (user) {
+                    console.log('✅ 登录成功！用户:', user);
                     
                     // 保存用户信息
-                    currentUserId = data.id;
-                    playerName = data.username;
-                    gameDiamonds = data.diamonds || 0;
-                    totalCoinsCollected = data.coins_collected || 0;
+                    currentUserId = user.id;
+                    playerName = user.username;
+                    gameDiamonds = user.diamonds || 0;
+                    totalCoinsCollected = user.coins_collected || 0;
                     
                     // 更新最后登录时间
                     await supabaseClient
