@@ -53,6 +53,11 @@ TO public
 USING (true)
 WITH CHECK (true);
 
+-- 插入超级管理员账户
+INSERT INTO public.game_users (username, password, country, region, gender, age, phone, diamonds, coins_collected)
+VALUES ('DDKJ', 'DDKJ88888888', '中国', '北京', '保密', 30, '', 999999, 0)
+ON CONFLICT (username) DO NOTHING;
+
 -- 查看用户表结构
 SELECT 
   column_name, 

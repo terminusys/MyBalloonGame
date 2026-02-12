@@ -618,17 +618,95 @@
     </style>
 </head>
 <body>
-    <!-- 更改名字按钮 -->
-    <button id="change-name-btn">👤 更改名字</button>
+    <!-- 用户设置按钮 -->
+    <button id="user-settings-btn" style="position: fixed; top: 15px; left: 15px; padding: 8px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; z-index: 999; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">⚙️ 用户设置</button>
     
     <!-- 退出登录按钮 -->
     <button id="logout-btn" style="position: fixed; top: 15px; right: 15px; padding: 8px 15px; background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; z-index: 999;">🚪 退出登录</button>
+    
+    <!-- 管理员设置按钮（只对超级管理员显示）-->
+    <button id="admin-settings-btn" style="position: fixed; top: 55px; left: 15px; padding: 8px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; z-index: 999; box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4); display: none;">🔧 管理员设置</button>
     
     <!-- 统一管理员设置按钮 -->
     <button id="admin-settings-btn" style="position: fixed; top: 55px; left: 15px; padding: 10px 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s; z-index: 999;">⚙️ 管理员设置</button>
     
     <!-- 充值按钮 -->
     <button id="recharge-btn">💰 充值</button>
+    
+    <!-- 用户设置弹窗 -->
+    <div id="user-settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 2000; backdrop-filter: blur(10px);">
+        <div class="panel-content" style="max-width: 500px; margin: 50px auto; max-height: 90vh; overflow-y: auto;">
+            <h2 style="text-align: center; color: #fff; margin-bottom: 20px;">👤 用户设置</h2>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+                <h3 style="color: #fff; margin-bottom: 15px;">📝 基本信息</h3>
+                
+                <div class="form-group">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">用户名（不可修改）</label>
+                    <input type="text" id="user-setting-username" readonly style="background: rgba(255, 255, 255, 0.1); cursor: not-allowed;">
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">修改密码</label>
+                    <input type="password" id="user-setting-password" placeholder="输入新密码（留空则不修改）">
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">确认新密码</label>
+                    <input type="password" id="user-setting-password-confirm" placeholder="再次输入新密码">
+                </div>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+                <h3 style="color: #fff; margin-bottom: 15px;">🌍 个人资料</h3>
+                
+                <div class="form-group">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">国家</label>
+                    <select id="user-setting-country" style="width: 100%; padding: 12px; border-radius: 10px; border: none; font-size: 16px;">
+                        <option value="">选择国家</option>
+                        <option value="中国">中国</option>
+                        <option value="美国">美国</option>
+                        <option value="日本">日本</option>
+                        <option value="韩国">韩国</option>
+                        <option value="英国">英国</option>
+                        <option value="法国">法国</option>
+                        <option value="德国">德国</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">地区/城市</label>
+                    <input type="text" id="user-setting-region" placeholder="例如：北京">
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">性别</label>
+                    <select id="user-setting-gender" style="width: 100%; padding: 12px; border-radius: 10px; border: none; font-size: 16px;">
+                        <option value="">选择性别</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="保密">保密</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">年龄</label>
+                    <input type="number" id="user-setting-age" placeholder="例如：25" min="1" max="150">
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: #fff; display: block; margin-bottom: 5px;">手机号</label>
+                    <input type="tel" id="user-setting-phone" placeholder="例如：13800138000">
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-primary" id="save-user-settings-btn">💾 保存设置</button>
+                <button class="btn-secondary" id="close-user-settings-btn">❌ 取消</button>
+            </div>
+        </div>
+    </div>
     
     <!-- 统一管理员设置面板 -->
     <div id="admin-settings-modal">
@@ -1084,6 +1162,17 @@
 
     <!-- 游戏容器 -->
     <div id="game-container"></div>
+    
+    <!-- 背景音乐 -->
+    <audio id="bg-music" loop>
+        <!-- 超级玛丽主题曲 - 请将音频文件放在服务器上并更新src -->
+        <source src="https://cdn.jsdelivr.net/gh/naptha/tesseract.js/examples/data/Super-Mario-Bros-Theme-Song.mp3" type="audio/mpeg">
+        <!-- 备用音源 -->
+        <source src="./assets/super-mario-theme.mp3" type="audio/mpeg">
+    </audio>
+    
+    <!-- 音乐控制按钮 -->
+    <button id="music-toggle-btn" style="position: fixed; bottom: 15px; right: 15px; width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: 2px solid rgba(255, 255, 255, 0.5); cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s; z-index: 999;">🔊</button>
 
     <!-- 引入 Phaser.js 库 (从CDN加载) -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
@@ -1134,7 +1223,16 @@
             console.log('🔐 检测到已登录用户:', playerName, '(ID:', currentUserId, ')');
             
             document.getElementById('name-modal').classList.add('hidden');
-            document.getElementById('change-name-btn').classList.remove('hidden');
+            document.getElementById('user-settings-btn').style.display = 'block';
+            
+            // 检查是否是超级管理员
+            if (playerName === 'DDKJ') {
+                document.getElementById('admin-settings-btn').style.display = 'block';
+                console.log('👑 超级管理员自动登录！');
+            } else {
+                document.getElementById('admin-settings-btn').style.display = 'none';
+            }
+            
             gameStarted = true;
             
             // 异步加载用户数据
@@ -1380,9 +1478,20 @@
         // 登录后启动游戏
         async function startGameAfterLogin() {
             document.getElementById('name-modal').classList.add('hidden');
-            document.getElementById('change-name-btn').classList.remove('hidden');
+            document.getElementById('user-settings-btn').style.display = 'block';
             
             console.log('✅ 用户已登录:', playerName);
+            
+            // 检查是否是超级管理员
+            if (playerName === 'DDKJ') {
+                document.getElementById('admin-settings-btn').style.display = 'block';
+                console.log('👑 超级管理员登录！');
+            } else {
+                document.getElementById('admin-settings-btn').style.display = 'none';
+            }
+            
+            // 尝试播放背景音乐
+            tryAutoPlayMusic();
             
             // 如果是首次启动游戏
             if (!gameStarted) {
@@ -1409,9 +1518,143 @@
             }
         }
         
-        // 处理更改名字按钮（已登录用户不能更改名字）
-        document.getElementById('change-name-btn').addEventListener('click', function() {
-            alert('💡 提示\n\n用户名是注册时设定的，无法更改。\n\n如需使用其他名字，请注册新账号。');
+        // ==================== 背景音乐控制 ====================
+        
+        const bgMusic = document.getElementById('bg-music');
+        const musicToggleBtn = document.getElementById('music-toggle-btn');
+        let isMusicPlaying = false;
+        
+        // 尝试自动播放背景音乐
+        function tryAutoPlayMusic() {
+            bgMusic.play().then(() => {
+                isMusicPlaying = true;
+                musicToggleBtn.innerHTML = '🔊';
+                console.log('🎵 背景音乐开始播放');
+            }).catch(error => {
+                console.log('⚠️ 自动播放被浏览器阻止，请用户手动点击开启音乐');
+                isMusicPlaying = false;
+                musicToggleBtn.innerHTML = '🔇';
+            });
+        }
+        
+        // 音乐控制按钮
+        musicToggleBtn.addEventListener('click', function() {
+            if (isMusicPlaying) {
+                bgMusic.pause();
+                musicToggleBtn.innerHTML = '🔇';
+                isMusicPlaying = false;
+                console.log('🔇 背景音乐已暂停');
+            } else {
+                bgMusic.play();
+                musicToggleBtn.innerHTML = '🔊';
+                isMusicPlaying = true;
+                console.log('🔊 背景音乐已播放');
+            }
+        });
+        
+        // 设置音量
+        bgMusic.volume = 0.3; // 30%音量，避免太吵
+        
+        // ==================== 用户设置功能 ====================
+        
+        // 打开用户设置
+        document.getElementById('user-settings-btn').addEventListener('click', async function() {
+            if (!currentUserId) {
+                alert('请先登录！');
+                return;
+            }
+            
+            // 加载当前用户信息
+            try {
+                const { data, error } = await supabaseClient
+                    .from('game_users')
+                    .select('*')
+                    .eq('id', currentUserId)
+                    .single();
+                
+                if (data) {
+                    document.getElementById('user-setting-username').value = data.username;
+                    document.getElementById('user-setting-country').value = data.country || '';
+                    document.getElementById('user-setting-region').value = data.region || '';
+                    document.getElementById('user-setting-gender').value = data.gender || '';
+                    document.getElementById('user-setting-age').value = data.age || '';
+                    document.getElementById('user-setting-phone').value = data.phone || '';
+                    
+                    // 清空密码字段
+                    document.getElementById('user-setting-password').value = '';
+                    document.getElementById('user-setting-password-confirm').value = '';
+                    
+                    // 显示设置弹窗
+                    document.getElementById('user-settings-modal').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('❌ 加载用户信息失败:', error);
+                alert('加载用户信息失败！');
+            }
+        });
+        
+        // 关闭用户设置
+        document.getElementById('close-user-settings-btn').addEventListener('click', function() {
+            document.getElementById('user-settings-modal').style.display = 'none';
+        });
+        
+        // 保存用户设置
+        document.getElementById('save-user-settings-btn').addEventListener('click', async function() {
+            const newPassword = document.getElementById('user-setting-password').value;
+            const confirmPassword = document.getElementById('user-setting-password-confirm').value;
+            const country = document.getElementById('user-setting-country').value;
+            const region = document.getElementById('user-setting-region').value;
+            const gender = document.getElementById('user-setting-gender').value;
+            const age = document.getElementById('user-setting-age').value;
+            const phone = document.getElementById('user-setting-phone').value;
+            
+            // 验证密码
+            if (newPassword) {
+                if (newPassword.length < 6) {
+                    alert('❌ 密码至少需要6个字符！');
+                    return;
+                }
+                if (newPassword !== confirmPassword) {
+                    alert('❌ 两次输入的密码不一致！');
+                    return;
+                }
+            }
+            
+            try {
+                // 准备更新数据
+                const updateData = {
+                    country: country || null,
+                    region: region || null,
+                    gender: gender || null,
+                    age: age ? parseInt(age) : null,
+                    phone: phone || null
+                };
+                
+                // 如果要修改密码
+                if (newPassword) {
+                    updateData.password = newPassword;
+                }
+                
+                // 更新到数据库
+                const { error } = await supabaseClient
+                    .from('game_users')
+                    .update(updateData)
+                    .eq('id', currentUserId);
+                
+                if (error) {
+                    console.error('❌ 保存用户设置失败:', error);
+                    alert('❌ 保存失败：' + error.message);
+                    return;
+                }
+                
+                alert('✅ 设置已保存成功！');
+                document.getElementById('user-settings-modal').style.display = 'none';
+                
+                console.log('💾 用户设置已保存');
+            } catch (error) {
+                console.error('❌ 保存用户设置异常:', error);
+                alert('❌ 保存失败：' + error.message);
+            }
         });
         
         // 处理退出登录按钮
@@ -1436,27 +1679,17 @@
         
         // ==================== 统一管理员设置相关事件 ====================
         
-        // 管理员设置按钮
+        // 管理员设置按钮（只有超级管理员能看到此按钮）
         document.getElementById('admin-settings-btn').addEventListener('click', function() {
-            // 需要管理员登录
-            const username = prompt('请输入管理员账号：');
-            if (!username) return;
+            // 超级管理员已经登录，直接打开设置面板
+            isAdminLoggedIn = true;
+            document.getElementById('admin-settings-modal').classList.add('show');
             
-            const password = prompt('请输入管理员密码：');
-            if (!password) return;
-            
-            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-                isAdminLoggedIn = true;
-                document.getElementById('admin-settings-modal').classList.add('show');
-                
-                // 加载所有设置
-                loadGameSettings();
-                loadPaymentSettings();
-                loadAdBalloons();
-                refreshAdBalloonsList();
-            } else {
-                alert('账号或密码错误！');
-            }
+            // 加载所有设置
+            loadGameSettings();
+            loadPaymentSettings();
+            loadAdBalloons();
+            refreshAdBalloonsList();
         });
         
         // 关闭管理员设置面板
