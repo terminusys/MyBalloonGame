@@ -1182,10 +1182,11 @@
     <div id="game-container"></div>
     
     <!-- 背景音乐 -->
-    <audio id="bg-music" loop preload="auto" crossorigin="anonymous">
-        <!-- 超级玛丽主题曲 - 使用多个备用源 -->
+    <audio id="bg-music" loop preload="auto">
+        <!-- 本地超级玛丽音乐文件（最优先，最稳定） -->
+        <source src="./assets/music/01.%20Ground%20Theme.mp3" type="audio/mpeg">
+        <!-- 备用CDN源（如果本地文件加载失败） -->
         <source src="https://github.com/justinvforvendetta/8bit-game-music/raw/master/Super%20Mario%20Bros%20-%20Overworld.mp3" type="audio/mpeg">
-        <source src="https://cdn.freesound.org/previews/100/100828_1234560-lq.mp3" type="audio/mpeg">
         <source src="https://www.myinstants.com/media/sounds/super-mario-bros.mp3" type="audio/mpeg">
     </audio>
     
