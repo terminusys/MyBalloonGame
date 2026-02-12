@@ -660,14 +660,14 @@
             <p style="font-size: 16px; color: #FFD700;">选择复活方式：</p>
             
             <div class="revive-option">
-                <h4 id="revive-credits-option">消耗100游戏分复活</h4>
-                <button class="revive-btn" id="revive-credits-btn">使用游戏分复活</button>
+                <h4 id="revive-credits-option">消耗100钻石复活</h4>
+                <button class="revive-btn" id="revive-credits-btn">使用钻石复活</button>
             </div>
             
             <div class="revive-option">
                 <h4>充值0.1元复活</h4>
-                <p style="color: #aaa; font-size: 14px; margin: 5px 0;">充值1元 = 1000游戏分</p>
-                <button class="revive-btn" id="revive-pay-btn">支付宝充值复活</button>
+                <p style="color: #aaa; font-size: 14px; margin: 5px 0;">充值1元 = 1000💎钻石 | 100🪙金币 = 1💎钻石</p>
+                <button class="revive-btn" id="revive-pay-btn">充值复活</button>
             </div>
         </div>
     </div>
@@ -739,7 +739,7 @@
         <div class="panel-content" style="max-width: 600px;">
             <div class="emoji-icon">💎</div>
             <h2>充值中心</h2>
-            <p>1元 = 1000游戏分</p>
+            <p>💰 1元 = 1000💎钻石 | 🪙 100金币 = 1💎钻石</p>
             
             <div class="form-group">
                 <label>充值金额（元）：</label>
@@ -747,8 +747,8 @@
             </div>
             
             <div class="form-group">
-                <p style="color: #FFD700; font-size: 18px; margin: 10px 0;">
-                    将获得：<span id="recharge-credits-preview">1000</span> 游戏分
+                <p style="color: #00FFFF; font-size: 20px; margin: 10px 0; font-weight: bold;">
+                    将获得：<span id="recharge-credits-preview">1000</span> 💎钻石
                 </p>
             </div>
             
@@ -901,6 +901,18 @@
         const ADMIN_PASSWORD = 'DDKJ88888888';
         let isAdminLoggedIn = false;
         
+        // ==================== 游戏元素生成参数 ====================
+        let gameSettings = {
+            coinSpawnRate: 0.02,        // 金币生成概率（每帧）
+            coinMaxCount: 20,           // 金币最大数量
+            coinLifeTime: 12000,        // 金币存在时间（毫秒）
+            diamondSpawnInterval: 100000, // 钻石生成间隔（毫秒）100秒
+            diamondSpawnCount: 5,       // 每次生成钻石数量
+            obstacleSpawnRate: 0.01,    // 障碍物生成概率
+            obstacleMaxCount: 5,        // 障碍物最大数量
+            healthPackInterval: 100000  // 加血包生成间隔（毫秒）
+        };
+        
         // 从 localStorage 读取保存的名字
         const savedName = localStorage.getItem('balloonPlayerName');
         if (savedName) {
@@ -912,11 +924,28 @@
             document.getElementById('change-name-btn').classList.add('hidden');
         }
         
-        // 从 localStorage 读取保存的游戏分
-        const savedCredits = localStorage.getItem('gameCredits');
-        if (savedCredits) {
-            gameCredits = parseInt(savedCredits) || 0;
-            console.log('📊 已加载游戏分:', gameCredits);
+        // 从 localStorage 读取保存的钻石和累计金币
+        const savedDiamonds = localStorage.getItem('gameDiamonds');
+        if (savedDiamonds) {
+            gameDiamonds = parseInt(savedDiamonds) || 0;
+            console.log('💎 已加载钻石:', gameDiamonds);
+        }
+        
+        const savedCoins = localStorage.getItem('totalCoinsCollected');
+        if (savedCoins) {
+            totalCoinsCollected = parseInt(savedCoins) || 0;
+            console.log('🪙 已加载累计金币:', totalCoinsCollected);
+        }
+        
+        // 加载游戏设置
+        const savedSettings = localStorage.getItem('gameSettings');
+        if (savedSettings) {
+            try {
+                gameSettings = JSON.parse(savedSettings);
+                console.log('⚙️ 已加载游戏设置');
+            } catch (error) {
+                console.error('加载游戏设置失败:', error);
+            }
         }
         
         // 处理开始游戏按钮
@@ -1015,16 +1044,16 @@
             document.getElementById('recharge-credits-preview').textContent = credits;
         });
         
-        // 使用游戏分复活
+        // 使用钻石复活
         document.getElementById('revive-credits-btn').addEventListener('click', function() {
-            if (gameCredits >= 100) {
-                gameCredits -= 100;
-                updateCredits();
-                localStorage.setItem('gameCredits', gameCredits);
-                revivePlayer('credits');
-                alert('复活成功！消耗100游戏分');
+            if (gameDiamonds >= 100) {
+                gameDiamonds -= 100;
+                updateDiamonds();
+                localStorage.setItem('gameDiamonds', gameDiamonds);
+                revivePlayer('diamonds');
+                alert('复活成功！消耗100钻石');
             } else {
-                alert('游戏分不足！需要100游戏分');
+                alert('钻石不足！需要100钻石');
             }
         });
         
@@ -1130,9 +1159,9 @@
             alert('收到您的支付通知！\n\n请等待管理员确认充值。\n确认后游戏分将自动到账。\n\n演示模式：将直接充值成功。');
             
             const credits = Math.floor(amount * 1000);
-            gameCredits += credits;
-            updateCredits();
-            localStorage.setItem('gameCredits', gameCredits);
+            gameDiamonds += credits;
+            updateDiamonds();
+            localStorage.setItem('gameDiamonds', gameDiamonds);
             
             document.getElementById('recharge-modal').classList.remove('show');
             alert('充值成功！获得 ' + credits + ' 游戏分');
@@ -1154,9 +1183,9 @@
             alert('收到您的支付通知！\n\n请等待管理员确认充值。\n确认后游戏分将自动到账。\n\n演示模式：将直接充值成功。');
             
             const credits = Math.floor(amount * 1000);
-            gameCredits += credits;
-            updateCredits();
-            localStorage.setItem('gameCredits', gameCredits);
+            gameDiamonds += credits;
+            updateDiamonds();
+            localStorage.setItem('gameDiamonds', gameDiamonds);
             
             document.getElementById('recharge-modal').classList.remove('show');
             alert('充值成功！获得 ' + credits + ' 游戏分');
@@ -1185,9 +1214,9 @@
             alert('⚠️ 演示模式提示：\n\n真实Visa支付需要：\n1. 接入Stripe/PayPal支付网关\n2. 后端服务器处理支付\n3. PCI DSS安全认证\n\n当前将模拟支付成功。');
             
             const credits = Math.floor(amount * 1000);
-            gameCredits += credits;
-            updateCredits();
-            localStorage.setItem('gameCredits', gameCredits);
+            gameDiamonds += credits;
+            updateDiamonds();
+            localStorage.setItem('gameDiamonds', gameDiamonds);
             
             document.getElementById('recharge-modal').classList.remove('show');
             alert('充值成功！获得 ' + credits + ' 游戏分');
@@ -1215,9 +1244,9 @@
             alert('⚠️ 演示模式提示：\n\n真实Mastercard支付需要：\n1. 接入Stripe/PayPal支付网关\n2. 后端服务器处理支付\n3. PCI DSS安全认证\n\n当前将模拟支付成功。');
             
             const credits = Math.floor(amount * 1000);
-            gameCredits += credits;
-            updateCredits();
-            localStorage.setItem('gameCredits', gameCredits);
+            gameDiamonds += credits;
+            updateDiamonds();
+            localStorage.setItem('gameDiamonds', gameDiamonds);
             
             document.getElementById('recharge-modal').classList.remove('show');
             alert('充值成功！获得 ' + credits + ' 游戏分');
@@ -1555,8 +1584,11 @@
         let playerHealth = 100;             // 玩家生命值
         let maxHealth = 100;                // 最大生命值
         let healthText;                     // 生命值显示文本
-        let gameCredits = 0;                // 游戏分
-        let creditsText;                    // 游戏分显示文本
+        let gameDiamonds = 0;               // 钻石（游戏积分）
+        let diamondsText;                   // 钻石显示文本
+        let diamondItems = [];              // 钻石道具数组
+        let lastDiamondSpawn = 0;           // 上次钻石生成时间
+        let totalCoinsCollected = 0;        // 累计收集的金币数
         let isDead = false;                 // 玩家是否死亡
         let lastHealthPackSpawn = 0;        // 上次加血包生成时间
         
@@ -1963,12 +1995,87 @@
             };
         }
         
+        // ==================== 创建钻石道具函数 ====================
+        function createDiamondItem(scene, x, y) {
+            const diamond = scene.add.graphics();
+            diamond.x = x;
+            diamond.y = y;
+            
+            // 绘制蓝色钻石
+            diamond.fillStyle(0x00FFFF, 1);  // 青蓝色
+            diamond.beginPath();
+            diamond.moveTo(0, -15);      // 顶点
+            diamond.lineTo(-10, -5);     // 左上
+            diamond.lineTo(-8, 10);      // 左下
+            diamond.lineTo(0, 15);       // 底点
+            diamond.lineTo(8, 10);       // 右下
+            diamond.lineTo(10, -5);      // 右上
+            diamond.closePath();
+            diamond.fillPath();
+            
+            // 添加白色高光
+            diamond.fillStyle(0xFFFFFF, 0.6);
+            diamond.fillTriangle(-3, -8, 0, -12, 3, -8);
+            
+            // 添加外发光效果
+            diamond.lineStyle(2, 0x00FFFF, 0.8);
+            diamond.beginPath();
+            diamond.moveTo(0, -15);
+            diamond.lineTo(-10, -5);
+            diamond.lineTo(-8, 10);
+            diamond.lineTo(0, 15);
+            diamond.lineTo(8, 10);
+            diamond.lineTo(10, -5);
+            diamond.closePath();
+            diamond.strokePath();
+            
+            // 设置深度
+            diamond.setDepth(10);
+            
+            // 添加旋转动画
+            scene.tweens.add({
+                targets: diamond,
+                angle: 360,
+                duration: 2000,
+                repeat: -1,
+                ease: 'Linear'
+            });
+            
+            // 添加上下浮动
+            scene.tweens.add({
+                targets: diamond,
+                y: y + 20,
+                duration: 2000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            // 添加闪烁效果
+            scene.tweens.add({
+                targets: diamond,
+                alpha: 0.6,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            return {
+                graphic: diamond,
+                x: x,
+                y: y,
+                collected: false,
+                value: 10  // 每个钻石道具+10钻石
+            };
+        }
+        
         // ==================== 生成游戏元素函数 ====================
         function spawnGameElements(scene) {
             const now = Date.now();
             
-            // 随机生成金币（最多20个）
-            if (coins.length < 20 && Math.random() < 0.02) {  // 2% 概率每帧，最多20个
+            // 随机生成金币（使用配置参数）
+            if (coins.length < gameSettings.coinMaxCount && Math.random() < gameSettings.coinSpawnRate) {
                 const x = Math.random() * config.width;
                 const y = Math.random() * config.height;
                 const coin = createCoin(scene, x, y);
@@ -1976,8 +2083,8 @@
                 console.log('💰 金币生成，当前数量:', coins.length);
             }
             
-            // 随机生成障碍物
-            if (Math.random() < 0.01 && obstacles.length < 5) {  // 1% 概率，最多5个
+            // 随机生成障碍物（使用配置参数）
+            if (Math.random() < gameSettings.obstacleSpawnRate && obstacles.length < gameSettings.obstacleMaxCount) {
                 const x = Math.random() * config.width;
                 const y = Math.random() * (config.height * 0.7) + 50;
                 const type = Math.random() > 0.5 ? 'bird' : 'cloud';
@@ -1985,8 +2092,8 @@
                 obstacles.push(obstacle);
             }
             
-            // 每100秒生成2个加血包
-            if (now - lastHealthPackSpawn > 100000 && healthPacks.length < 2) {
+            // 每100秒生成2个加血包（使用配置参数）
+            if (now - lastHealthPackSpawn > gameSettings.healthPackInterval && healthPacks.length < 2) {
                 // 生成2个加血包
                 for (let i = 0; i < 2; i++) {
                     const x = Math.random() * (config.width - 100) + 50;
@@ -1996,6 +2103,19 @@
                     console.log('💊 加血包生成，位置:', x, y);
                 }
                 lastHealthPackSpawn = now;
+            }
+            
+            // 每100秒生成5个钻石道具（使用配置参数）
+            if (now - lastDiamondSpawn > gameSettings.diamondSpawnInterval) {
+                // 生成5个钻石
+                for (let i = 0; i < gameSettings.diamondSpawnCount; i++) {
+                    const x = Math.random() * (config.width - 100) + 50;
+                    const y = Math.random() * (config.height - 100) + 50;
+                    const diamondItem = createDiamondItem(scene, x, y);
+                    diamondItems.push(diamondItem);
+                    console.log('💎 钻石生成，位置:', x, y);
+                }
+                lastDiamondSpawn = now;
             }
         }
         
@@ -2016,9 +2136,9 @@
                     // 收集金币
                     coin.collected = true;
                     score += 10;
-                    gameCredits += 1;  // 每个金币给1游戏分
+                    totalCoinsCollected += 1;  // 累计金币数
                     updateScore();
-                    updateCredits();
+                    updateDiamonds();  // 更新钻石（会自动检查兑换）
                     
                     // 金币消失动画
                     gameScene.tweens.add({
@@ -2033,7 +2153,41 @@
                     });
                     
                     // 播放音效（文字提示）
-                    showFloatingText(gameScene, balloon.x, balloon.y - 50, '+10 +1分', 0x00FF00);
+                    showFloatingText(gameScene, balloon.x, balloon.y - 50, '+10分', 0x00FF00);
+                }
+            });
+            
+            // 检测钻石道具碰撞
+            diamondItems.forEach((diamondItem, index) => {
+                if (diamondItem.collected) return;
+                
+                const distance = Phaser.Math.Distance.Between(
+                    balloon.x, balloon.y,
+                    diamondItem.x, diamondItem.graphic.y
+                );
+                
+                if (distance < 40) {  // 碰撞半径
+                    // 收集钻石
+                    diamondItem.collected = true;
+                    gameDiamonds += diamondItem.value;
+                    updateDiamonds();
+                    
+                    // 钻石消失动画
+                    gameScene.tweens.add({
+                        targets: diamondItem.graphic,
+                        alpha: 0,
+                        scale: 2,
+                        duration: 300,
+                        onComplete: () => {
+                            diamondItem.graphic.destroy();
+                            diamondItems.splice(index, 1);
+                        }
+                    });
+                    
+                    showFloatingText(gameScene, balloon.x, balloon.y - 50, '+' + diamondItem.value + ' 💎', 0x00FFFF);
+                    
+                    // 保存钻石到本地
+                    localStorage.setItem('gameDiamonds', gameDiamonds);
                 }
             });
             
@@ -2160,10 +2314,32 @@
             }
         }
         
-        // ==================== 更新游戏分显示 ====================
-        function updateCredits() {
-            if (creditsText) {
-                creditsText.setText('💎 ' + gameCredits + '分');
+        // ==================== 更新钻石显示 ====================
+        function updateDiamonds() {
+            if (diamondsText) {
+                diamondsText.setText('💎 ' + gameDiamonds);
+            }
+            
+            // 检查是否可以用金币兑换钻石
+            checkCoinToDiamondExchange();
+        }
+        
+        // ==================== 金币兑换钻石检查 ====================
+        function checkCoinToDiamondExchange() {
+            if (totalCoinsCollected >= 100) {
+                const exchangeCount = Math.floor(totalCoinsCollected / 100);
+                totalCoinsCollected = totalCoinsCollected % 100;
+                gameDiamonds += exchangeCount;
+                updateDiamonds();
+                
+                // 显示兑换提示
+                if (gameScene && balloon) {
+                    showFloatingText(gameScene, config.width / 2, 100, '💎 兑换 +' + exchangeCount + ' 钻石!', 0x00FFFF);
+                }
+                
+                // 保存到本地
+                localStorage.setItem('gameDiamonds', gameDiamonds);
+                localStorage.setItem('totalCoinsCollected', totalCoinsCollected);
             }
         }
         
@@ -2179,9 +2355,9 @@
             
             // 更新复活选项显示
             document.getElementById('revive-credits-option').textContent = 
-                gameCredits >= 100 ? '消耗100游戏分复活 ✓' : '消耗100游戏分复活（不足）';
+                gameDiamonds >= 100 ? '消耗100钻石复活 ✓' : '消耗100钻石复活（不足）';
             
-            if (gameCredits >= 100) {
+            if (gameDiamonds >= 100) {
                 document.getElementById('revive-credits-btn').disabled = false;
             } else {
                 document.getElementById('revive-credits-btn').disabled = true;
@@ -2376,10 +2552,10 @@
             healthText.setScrollFactor(0);
             healthText.setDepth(1000);
             
-            // ---------- 创建游戏分显示 ----------
-            creditsText = scene.add.text(
+            // ---------- 创建钻石显示 ----------
+            diamondsText = scene.add.text(
                 20, 90,
-                '💎 0分',
+                '💎 0',
                 {
                     fontSize: '20px',
                     fontFamily: 'Inter, sans-serif',
@@ -2389,16 +2565,17 @@
                     fontStyle: 'bold'
                 }
             );
-            creditsText.setScrollFactor(0);
-            creditsText.setDepth(1000);
+            diamondsText.setScrollFactor(0);
+            diamondsText.setDepth(1000);
 
             // 设置初始目标位置为当前位置
             targetX = balloon.x;
             targetY = balloon.y;
             previousX = balloon.x;
             
-            // 初始化加血包生成时间
+            // 初始化加血包和钻石生成时间
             lastHealthPackSpawn = Date.now();
+            lastDiamondSpawn = Date.now();
 
             // ---------- 添加点击事件监听 ----------
             scene.input.on('pointerdown', function(pointer) {
