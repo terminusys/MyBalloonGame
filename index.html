@@ -1061,16 +1061,10 @@
             console.log('🪙 已加载累计金币:', totalCoinsCollected);
         }
         
-        // 加载游戏设置
-        const savedSettings = localStorage.getItem('gameSettings');
-        if (savedSettings) {
-            try {
-                gameSettings = JSON.parse(savedSettings);
-                console.log('⚙️ 已加载游戏设置');
-            } catch (error) {
-                console.error('加载游戏设置失败:', error);
-            }
-        }
+        // 注意：游戏设置现在从 Supabase 全局配置加载
+        // 不再使用 localStorage 存储游戏设置，确保所有玩家使用相同配置
+        // const savedSettings = localStorage.getItem('gameSettings'); // 已废弃
+        console.log('⚙️ 游戏设置将在登录后从 Supabase 加载');
         
         // 处理开始游戏按钮
         document.getElementById('start-game-btn').addEventListener('click', startGame);
@@ -1214,14 +1208,18 @@
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = async function(event) {
                     const preview = document.getElementById('alipay-qrcode-preview');
                     preview.src = event.target.result;
                     preview.classList.add('show');
                     paymentSettings.alipayQRCode = event.target.result;
-                    // 立即保存到本地存储
-                    localStorage.setItem('paymentSettings', JSON.stringify(paymentSettings));
-                    console.log('✅ 支付宝收款码已上传并保存');
+                    
+                    // 立即保存到 Supabase 数据库
+                    const success = await saveGlobalSettings();
+                    if (success) {
+                        console.log('✅ 支付宝收款码已上传并保存到云端');
+                        alert('✅ 支付宝收款码已上传成功！\n\n🌍 所有玩家现在可以看到这个收款码！');
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -1232,30 +1230,36 @@
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = async function(event) {
                     const preview = document.getElementById('wechat-qrcode-preview');
                     preview.src = event.target.result;
                     preview.classList.add('show');
                     paymentSettings.wechatQRCode = event.target.result;
-                    // 立即保存到本地存储
-                    localStorage.setItem('paymentSettings', JSON.stringify(paymentSettings));
-                    console.log('✅ 微信收款码已上传并保存');
+                    
+                    // 立即保存到 Supabase 数据库
+                    const success = await saveGlobalSettings();
+                    if (success) {
+                        console.log('✅ 微信收款码已上传并保存到云端');
+                        alert('✅ 微信收款码已上传成功！\n\n🌍 所有玩家现在可以看到这个收款码！');
+                    }
                 };
                 reader.readAsDataURL(file);
             }
         });
         
         // 保存支付设置
-        document.getElementById('save-payment-settings-btn').addEventListener('click', function() {
+        document.getElementById('save-payment-settings-btn').addEventListener('click', async function() {
             paymentSettings.visaAccountName = document.getElementById('visa-account-name').value;
             paymentSettings.visaCardNumber = document.getElementById('visa-card-number').value;
             paymentSettings.mastercardAccountName = document.getElementById('mastercard-account-name').value;
             paymentSettings.mastercardCardNumber = document.getElementById('mastercard-card-number').value;
             
-            // 保存到本地存储
-            localStorage.setItem('paymentSettings', JSON.stringify(paymentSettings));
+            // 保存到 Supabase 数据库
+            const success = await saveGlobalSettings();
             
-            alert('✅ 支付设置已保存！');
+            if (success) {
+                alert('✅ 支付设置已保存到云端！\n\n🌍 所有玩家可以看到新的支付设置！');
+            }
         });
         
         // 支付方式切换
@@ -1436,16 +1440,9 @@
             }
         }
         
-        // 页面加载时读取支付设置
-        try {
-            const saved = localStorage.getItem('paymentSettings');
-            if (saved) {
-                paymentSettings = JSON.parse(saved);
-                updateRechargeQRCodes();
-            }
-        } catch (error) {
-            console.error('加载支付设置失败:', error);
-        }
+        // 注意：支付设置现在从 Supabase 全局配置加载
+        // 不再使用 localStorage，确保所有玩家看到相同的支付方式
+        console.log('💳 支付设置将在登录后从 Supabase 加载');
         
         // ==================== 游戏参数设置功能 ====================
         
@@ -1465,7 +1462,7 @@
         }
         
         // 保存游戏参数
-        document.getElementById('save-game-params-btn').addEventListener('click', function() {
+        document.getElementById('save-game-params-btn').addEventListener('click', async function() {
             gameSettings.coinSpawnRate = parseFloat(document.getElementById('coin-spawn-rate').value);
             gameSettings.coinMaxCount = parseInt(document.getElementById('coin-max-count').value);
             gameSettings.coinLifeTime = parseInt(document.getElementById('coin-lifetime').value);
@@ -1478,15 +1475,17 @@
             gameSettings.healthPackCount = parseInt(document.getElementById('healthpack-count').value);
             gameSettings.healthPackLifetime = parseInt(document.getElementById('healthpack-lifetime').value);
             
-            // 保存到本地存储
-            localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
+            // 保存到 Supabase 数据库（全局配置）
+            const success = await saveGlobalSettings();
             
-            alert('✅ 游戏参数已保存！\n\n参数将在下次生成元素时生效。\n\n💡 提示：所有使用此浏览器的玩家都将使用这些配置。');
+            if (success) {
+                alert('✅ 游戏参数已保存到云端数据库！\n\n🌍 所有玩家将使用这些配置！\n⏱️ 参数将在下次生成元素时生效。');
+            }
         });
         
         // 恢复默认参数
-        document.getElementById('reset-game-params-btn').addEventListener('click', function() {
-            if (!confirm('确定要恢复默认参数吗？')) return;
+        document.getElementById('reset-game-params-btn').addEventListener('click', async function() {
+            if (!confirm('确定要恢复默认参数吗？\n\n⚠️ 这将影响所有玩家！')) return;
             
             gameSettings = {
                 coinSpawnRate: 0.02,
@@ -1503,12 +1502,16 @@
             };
             
             loadGameSettings();
-            localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
             
-            alert('✅ 已恢复默认参数！\n\n新的默认值：\n🪙 金币最多15个\n💎 钻石道具最多5个\n⚡ 障碍物最多6个\n💊 加血包每次2个，停留8秒');
+            // 保存到 Supabase 数据库
+            const success = await saveGlobalSettings();
+            
+            if (success) {
+                alert('✅ 已恢复默认参数并保存到云端！\n\n新的默认值：\n🪙 金币最多15个\n💎 钻石道具最多5个\n⚡ 障碍物最多6个\n💊 加血包每次2个，停留8秒\n\n🌍 所有玩家已更新配置！');
+            }
         });
         
-        function startGame() {
+        async function startGame() {
             const input = document.getElementById('player-name-input').value.trim();
             
             console.log('🎯 startGame 被调用，输入值:', input);
@@ -1543,8 +1546,13 @@
             
             // 如果是首次启动游戏
             if (!gameStarted) {
-                gameStarted = true;
                 console.log('🎈 游戏首次启动，玩家:', playerName);
+                
+                // 🔥 关键：加载全局配置
+                console.log('🔄 正在加载全局游戏配置...');
+                await loadGlobalSettings();
+                
+                gameStarted = true;
                 
                 // 如果游戏场景已经创建，立即初始化
                 if (gameScene) {
@@ -1564,7 +1572,7 @@
         // ==================== 广告位管理函数 ====================
         
         // 添加广告气球
-        function addAdBalloon() {
+        async function addAdBalloon() {
             const text = document.getElementById('new-ad-text').value.trim();
             const imageInput = document.getElementById('new-ad-image');
             const x = parseInt(document.getElementById('new-ad-x').value);
@@ -1584,7 +1592,7 @@
             // 读取图片（如果有）
             if (imageInput.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = async function(event) {
                     const adData = {
                         id: Date.now(),
                         text: text,
@@ -1594,7 +1602,7 @@
                         opacity: opacity
                     };
                     adBalloons.push(adData);
-                    saveAdBalloonsToStorage();
+                    const success = await saveAdBalloonsToStorage();
                     refreshAdBalloonsList();
                     
                     // 在游戏中创建广告气球
@@ -1607,7 +1615,9 @@
                     document.getElementById('new-ad-image').value = '';
                     document.getElementById('new-ad-image-preview').classList.remove('show');
                     
-                    alert('广告气球添加成功！');
+                    if (success) {
+                        alert('✅ 广告气球添加成功！\n\n🌍 所有玩家现在可以看到这个广告！');
+                    }
                 };
                 reader.readAsDataURL(imageInput.files[0]);
             } else {
@@ -1620,7 +1630,7 @@
                     opacity: opacity
                 };
                 adBalloons.push(adData);
-                saveAdBalloonsToStorage();
+                const success = await saveAdBalloonsToStorage();
                 refreshAdBalloonsList();
                 
                 // 在游戏中创建广告气球
@@ -1630,7 +1640,10 @@
                 
                 // 清空表单
                 document.getElementById('new-ad-text').value = '';
-                alert('广告气球添加成功！');
+                
+                if (success) {
+                    alert('✅ 广告气球添加成功！\n\n🌍 所有玩家现在可以看到这个广告！');
+                }
             }
         }
         
@@ -1661,13 +1674,13 @@
         }
         
         // 删除广告气球
-        function deleteAdBalloon(id) {
-            if (!confirm('确定要删除这个广告气球吗？')) return;
+        async function deleteAdBalloon(id) {
+            if (!confirm('确定要删除这个广告气球吗？\n\n⚠️ 这将影响所有玩家！')) return;
             
             const index = adBalloons.findIndex(ad => ad.id === id);
             if (index !== -1) {
                 adBalloons.splice(index, 1);
-                saveAdBalloonsToStorage();
+                const success = await saveAdBalloonsToStorage();
                 refreshAdBalloonsList();
                 
                 // 从游戏中移除
@@ -1676,32 +1689,32 @@
                     adBalloonsObjects.splice(index, 1);
                 }
                 
-                alert('广告气球已删除！');
+                if (success) {
+                    alert('✅ 广告气球已删除！\n\n🌍 所有玩家的界面已更新！');
+                }
             }
         }
         
         // 保存广告气球到本地存储
-        function saveAdBalloonsToStorage() {
+        async function saveAdBalloonsToStorage() {
             try {
-                localStorage.setItem('adBalloons', JSON.stringify(adBalloons));
-                console.log('✅ 广告气球数据已保存');
+                // 保存到 Supabase 数据库
+                const success = await saveGlobalSettings();
+                if (success) {
+                    console.log('✅ 广告气球数据已保存到云端');
+                }
+                return success;
             } catch (error) {
                 console.error('❌ 保存广告气球数据失败:', error);
+                return false;
             }
         }
         
-        // 加载广告气球数据
+        // 注意：广告气球数据现在从 Supabase 全局配置加载
+        // 不再使用 localStorage，确保所有玩家看到相同的广告
         function loadAdBalloons() {
-            try {
-                const saved = localStorage.getItem('adBalloons');
-                if (saved) {
-                    adBalloons = JSON.parse(saved);
-                    console.log('✅ 已加载广告气球数据:', adBalloons.length, '个');
-                }
-            } catch (error) {
-                console.error('❌ 加载广告气球数据失败:', error);
-                adBalloons = [];
-            }
+            console.log('📢 广告气球将在登录后从 Supabase 加载');
+            // 不再从 localStorage 加载，统一从 Supabase 获取
         }
         
         // ==================== Supabase 配置 ====================
@@ -1728,6 +1741,129 @@
             }
         } catch (error) {
             console.error('❌ Supabase 初始化失败:', error);
+        }
+
+        // ==================== 从 Supabase 加载全局配置 ====================
+        async function loadGlobalSettings() {
+            if (!supabaseClient) {
+                console.warn('⚠️ Supabase 客户端未初始化，使用本地默认配置');
+                return false;
+            }
+
+            try {
+                console.log('🔄 正在从 Supabase 加载全局配置...');
+                
+                const { data, error } = await supabaseClient
+                    .from('global_game_settings')
+                    .select('*')
+                    .eq('id', 'default')
+                    .single();
+
+                if (error) {
+                    console.error('❌ 加载全局配置失败:', error);
+                    return false;
+                }
+
+                if (data) {
+                    // 更新游戏设置
+                    gameSettings = {
+                        coinSpawnRate: parseFloat(data.coin_spawn_rate),
+                        coinMaxCount: parseInt(data.coin_max_count),
+                        coinLifeTime: parseInt(data.coin_lifetime),
+                        diamondSpawnInterval: parseInt(data.diamond_spawn_interval),
+                        diamondSpawnCount: parseInt(data.diamond_spawn_count),
+                        diamondMaxCount: parseInt(data.diamond_max_count),
+                        obstacleSpawnRate: parseFloat(data.obstacle_spawn_rate),
+                        obstacleMaxCount: parseInt(data.obstacle_max_count),
+                        healthPackInterval: parseInt(data.health_pack_interval),
+                        healthPackCount: parseInt(data.health_pack_count),
+                        healthPackLifetime: parseInt(data.health_pack_lifetime)
+                    };
+                    
+                    // 更新广告气球
+                    if (data.ad_balloons) {
+                        adBalloons = data.ad_balloons;
+                        console.log('📢 加载了', adBalloons.length, '个广告气球');
+                    }
+                    
+                    // 更新支付设置
+                    if (data.payment_settings) {
+                        paymentSettings = {
+                            alipayQRCode: data.payment_settings.alipayQRCode || null,
+                            wechatQRCode: data.payment_settings.wechatQRCode || null,
+                            visaAccountName: data.payment_settings.visaAccount || '',
+                            visaCardNumber: data.payment_settings.visaCardLast4 || '',
+                            mastercardAccountName: data.payment_settings.mastercardAccount || '',
+                            mastercardCardNumber: data.payment_settings.mastercardCardLast4 || ''
+                        };
+                        console.log('💳 加载了支付设置');
+                    }
+                    
+                    console.log('✅ 全局配置加载成功！');
+                    console.log('⚙️ 游戏设置:', gameSettings);
+                    return true;
+                } else {
+                    console.warn('⚠️ 未找到全局配置，使用默认值');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ 加载全局配置异常:', error);
+                return false;
+            }
+        }
+
+        // ==================== 保存全局配置到 Supabase ====================
+        async function saveGlobalSettings() {
+            if (!supabaseClient) {
+                console.error('❌ Supabase 客户端未初始化');
+                alert('❌ 无法保存配置：数据库连接失败');
+                return false;
+            }
+
+            try {
+                console.log('🔄 正在保存全局配置到 Supabase...');
+                
+                const { data, error } = await supabaseClient
+                    .from('global_game_settings')
+                    .update({
+                        coin_spawn_rate: gameSettings.coinSpawnRate,
+                        coin_max_count: gameSettings.coinMaxCount,
+                        coin_lifetime: gameSettings.coinLifeTime,
+                        diamond_spawn_interval: gameSettings.diamondSpawnInterval,
+                        diamond_spawn_count: gameSettings.diamondSpawnCount,
+                        diamond_max_count: gameSettings.diamondMaxCount,
+                        obstacle_spawn_rate: gameSettings.obstacleSpawnRate,
+                        obstacle_max_count: gameSettings.obstacleMaxCount,
+                        health_pack_interval: gameSettings.healthPackInterval,
+                        health_pack_count: gameSettings.healthPackCount,
+                        health_pack_lifetime: gameSettings.healthPackLifetime,
+                        ad_balloons: adBalloons,
+                        payment_settings: {
+                            alipayQRCode: paymentSettings.alipayQRCode,
+                            wechatQRCode: paymentSettings.wechatQRCode,
+                            visaAccount: paymentSettings.visaAccountName,
+                            visaCardLast4: paymentSettings.visaCardNumber,
+                            mastercardAccount: paymentSettings.mastercardAccountName,
+                            mastercardCardLast4: paymentSettings.mastercardCardNumber
+                        },
+                        updated_at: new Date().toISOString(),
+                        updated_by: playerName || 'admin'
+                    })
+                    .eq('id', 'default');
+
+                if (error) {
+                    console.error('❌ 保存全局配置失败:', error);
+                    alert('❌ 保存配置失败：' + error.message);
+                    return false;
+                }
+
+                console.log('✅ 全局配置已保存到数据库！');
+                return true;
+            } catch (error) {
+                console.error('❌ 保存全局配置异常:', error);
+                alert('❌ 保存配置异常：' + error.message);
+                return false;
+            }
         }
 
         // ==================== Phaser 游戏配置 ====================
