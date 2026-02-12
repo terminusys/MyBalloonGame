@@ -1044,12 +1044,40 @@
                 ease: 'Sine.easeInOut'
             });
             
+            // 12秒后自动消失的动画
+            scene.time.delayedCall(10000, () => {
+                // 10秒后开始闪烁提示即将消失
+                scene.tweens.add({
+                    targets: coin,
+                    alpha: 0.3,
+                    duration: 300,
+                    yoyo: true,
+                    repeat: 6,  // 闪烁3次
+                    onComplete: () => {
+                        // 消失动画
+                        scene.tweens.add({
+                            targets: coin,
+                            alpha: 0,
+                            scale: 0,
+                            duration: 500,
+                            ease: 'Power2',
+                            onComplete: () => {
+                                if (coin && !coin.destroyed) {
+                                    coin.destroy();
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+            
             return {
                 graphic: coin,
                 x: x,
                 y: y,
                 radius: 15,
-                collected: false
+                collected: false,
+                createTime: Date.now()  // 记录创建时间
             };
         }
         
@@ -1112,12 +1140,13 @@
         
         // ==================== 生成游戏元素函数 ====================
         function spawnGameElements(scene) {
-            // 随机生成金币
-            if (Math.random() < 0.02) {  // 2% 概率每帧
+            // 随机生成金币（最多20个）
+            if (coins.length < 20 && Math.random() < 0.02) {  // 2% 概率每帧，最多20个
                 const x = Math.random() * config.width;
                 const y = Math.random() * config.height;
                 const coin = createCoin(scene, x, y);
                 coins.push(coin);
+                console.log('💰 金币生成，当前数量:', coins.length);
             }
             
             // 随机生成障碍物
@@ -1797,15 +1826,26 @@
             // ---------- 检测碰撞 ----------
             checkCollisions();
             
-            // ---------- 清理超出屏幕的元素 ----------
+            // ---------- 清理超出屏幕的元素和过期金币 ----------
+            const now = Date.now();
             coins = coins.filter(coin => {
                 if (coin.collected) return false;
+                
+                // 检查是否超出屏幕
                 const outOfBounds = coin.x < -50 || coin.x > config.width + 50 || 
                                    coin.y < -50 || coin.y > config.height + 50;
-                if (outOfBounds && coin.graphic) {
+                
+                // 检查是否超过12秒（金币会在10秒后开始闪烁，12秒后消失）
+                const isExpired = (now - coin.createTime) > 12000;
+                
+                // 检查金币图形是否已被销毁
+                const isDestroyed = !coin.graphic || coin.graphic.destroyed;
+                
+                if ((outOfBounds || isExpired || isDestroyed) && coin.graphic && !coin.graphic.destroyed) {
                     coin.graphic.destroy();
                 }
-                return !outOfBounds;
+                
+                return !outOfBounds && !isExpired && !isDestroyed;
             });
             
             obstacles = obstacles.filter(obstacle => {
