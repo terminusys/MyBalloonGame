@@ -2301,6 +2301,10 @@
                 if (data && data.settings) {
                     const s = data.settings; // 从settings字段读取
                     
+                    // 调试：打印从数据库读取的原始数据
+                    console.log('📥 从数据库读取的原始配置:', JSON.stringify(s, null, 2));
+                    console.log('🔍 数据库中的金币最大数量 (原始):', s.coinMaxCount);
+                    
                     // 更新游戏设置
                     gameSettings = {
                         coinSpawnRate: parseFloat(s.coinSpawnRate) || 0.02,
@@ -2316,10 +2320,16 @@
                         healthPackLifeTime: parseInt(s.healthPackLifeTime) || 8000
                     };
                     
+                    console.log('✅ 解析后的游戏设置:', JSON.stringify(gameSettings, null, 2));
+                    console.log('🔍 解析后的金币最大数量:', gameSettings.coinMaxCount);
+                    
                     // 更新广告气球
                     if (s.adBalloons) {
                         adBalloons = s.adBalloons;
                         console.log('📢 加载了', adBalloons.length, '个广告气球');
+                    } else {
+                        console.log('📢 没有广告气球数据，使用空数组');
+                        adBalloons = [];
                     }
                     
                     // 更新支付设置
@@ -2333,10 +2343,11 @@
                             mastercardCardNumber: s.paymentSettings.mastercardCardNumber || ''
                         };
                         console.log('💳 加载了支付设置');
+                    } else {
+                        console.log('💳 没有支付设置数据，使用默认值');
                     }
                     
                     console.log('✅ 全局配置加载成功！');
-                    console.log('⚙️ 游戏设置:', gameSettings);
                     return true;
                 } else {
                     console.warn('⚠️ 未找到全局配置，使用默认值');
@@ -2359,45 +2370,61 @@
             try {
                 console.log('🔄 正在保存全局配置到 Supabase...');
                 
+                // 准备要保存的数据
+                const settingsToSave = {
+                    coinSpawnRate: gameSettings.coinSpawnRate,
+                    coinMaxCount: gameSettings.coinMaxCount,
+                    coinLifeTime: gameSettings.coinLifeTime,
+                    diamondSpawnInterval: gameSettings.diamondSpawnInterval,
+                    diamondSpawnCount: gameSettings.diamondSpawnCount,
+                    diamondMaxCount: gameSettings.diamondMaxCount,
+                    obstacleSpawnRate: gameSettings.obstacleSpawnRate,
+                    obstacleMaxCount: gameSettings.obstacleMaxCount,
+                    healthPackInterval: gameSettings.healthPackInterval,
+                    healthPackSpawnCount: gameSettings.healthPackSpawnCount,
+                    healthPackLifeTime: gameSettings.healthPackLifeTime,
+                    paymentSettings: {
+                        alipayQRCode: paymentSettings.alipayQRCode,
+                        wechatQRCode: paymentSettings.wechatQRCode,
+                        visaAccountName: paymentSettings.visaAccountName,
+                        visaCardNumber: paymentSettings.visaCardNumber,
+                        mastercardAccountName: paymentSettings.mastercardAccountName,
+                        mastercardCardNumber: paymentSettings.mastercardCardNumber
+                    },
+                    adBalloons: adBalloons
+                };
+                
+                // 调试：打印要保存的数据
+                console.log('📦 准备保存的配置:', JSON.stringify(settingsToSave, null, 2));
+                
                 const { data, error } = await supabaseClient
                     .from('global_game_settings')
                     .update({
-                        settings: {
-                            coinSpawnRate: gameSettings.coinSpawnRate,
-                            coinMaxCount: gameSettings.coinMaxCount,
-                            coinLifeTime: gameSettings.coinLifeTime,
-                            diamondSpawnInterval: gameSettings.diamondSpawnInterval,
-                            diamondSpawnCount: gameSettings.diamondSpawnCount,
-                            diamondMaxCount: gameSettings.diamondMaxCount,
-                            obstacleSpawnRate: gameSettings.obstacleSpawnRate,
-                            obstacleMaxCount: gameSettings.obstacleMaxCount,
-                            healthPackInterval: gameSettings.healthPackInterval,
-                            healthPackSpawnCount: gameSettings.healthPackSpawnCount,
-                            healthPackLifeTime: gameSettings.healthPackLifeTime,
-                            paymentSettings: {
-                                alipayQRCode: paymentSettings.alipayQRCode,
-                                wechatQRCode: paymentSettings.wechatQRCode,
-                                visaAccountName: paymentSettings.visaAccountName,
-                                visaCardNumber: paymentSettings.visaCardNumber,
-                                mastercardAccountName: paymentSettings.mastercardAccountName,
-                                mastercardCardNumber: paymentSettings.mastercardCardNumber
-                            },
-                            adBalloons: adBalloons
-                        },
+                        settings: settingsToSave,
                         updated_at: new Date().toISOString()
                     })
-                    .eq('id', 'default');
+                    .eq('id', 'default')
+                    .select(); // 添加select()以获取更新后的数据
 
                 if (error) {
                     console.error('❌ 保存全局配置失败:', error);
+                    console.error('❌ 错误详情:', JSON.stringify(error, null, 2));
                     alert('❌ 保存配置失败：' + error.message);
                     return false;
                 }
 
                 console.log('✅ 全局配置已保存到数据库！');
+                console.log('✅ 返回的数据:', JSON.stringify(data, null, 2));
+                
+                // 验证保存
+                if (data && data.length > 0 && data[0].settings) {
+                    console.log('✅ 验证成功！数据库中的金币最大数量:', data[0].settings.coinMaxCount);
+                }
+                
                 return true;
             } catch (error) {
                 console.error('❌ 保存全局配置异常:', error);
+                console.error('❌ 异常堆栈:', error.stack);
                 alert('❌ 保存配置异常：' + error.message);
                 return false;
             }
