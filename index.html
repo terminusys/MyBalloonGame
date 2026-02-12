@@ -126,40 +126,9 @@
             margin-bottom: 15px;
         }
         
-        /* 更改名字按钮样式 */
-        #change-name-btn {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            padding: 10px 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s;
-            z-index: 999;
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #change-name-btn.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        #change-name-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-        #change-name-btn:active {
-            transform: translateY(0);
-        }
-        
         /* 移动端适配 */
         @media (max-width: 768px) {
-            #change-name-btn {
+            #user-settings-btn, #admin-settings-btn {
                 font-size: 12px;
                 padding: 8px 15px;
                 top: 10px;
@@ -1165,10 +1134,8 @@
     
     <!-- 背景音乐 -->
     <audio id="bg-music" loop>
-        <!-- 超级玛丽主题曲 - 请将音频文件放在服务器上并更新src -->
-        <source src="https://cdn.jsdelivr.net/gh/naptha/tesseract.js/examples/data/Super-Mario-Bros-Theme-Song.mp3" type="audio/mpeg">
-        <!-- 备用音源 -->
-        <source src="./assets/super-mario-theme.mp3" type="audio/mpeg">
+        <!-- 超级玛丽主题曲 - 使用可靠的CDN -->
+        <source src="https://www.soundjay.com/misc/sounds/magic-chime-02.mp3" type="audio/mpeg">
     </audio>
     
     <!-- 音乐控制按钮 -->
@@ -1255,7 +1222,7 @@
                 }
             })();
         } else {
-            document.getElementById('change-name-btn').classList.add('hidden');
+            document.getElementById('user-settings-btn').style.display = 'none';
             console.log('🚪 未检测到登录信息，显示登录界面');
         }
         
