@@ -1157,6 +1157,17 @@
         // ==================== 广告位管理 ====================
         let adBalloons = [];  // 存储广告气球数据
         let adBalloonsObjects = [];  // 存储广告气球的Phaser对象
+        
+        // ==================== 支付设置数据 ====================
+        let paymentSettings = {
+            alipayQRCode: null,
+            wechatQRCode: null,
+            visaAccountName: '',
+            visaCardNumber: '',
+            mastercardAccountName: '',
+            mastercardCardNumber: ''
+        };
+        
         const ADMIN_USERNAME = 'DDKJ';
         const ADMIN_PASSWORD = 'DDKJ88888888';
         let isAdminLoggedIn = false;
@@ -2403,16 +2414,6 @@
         let lastDiamondSpawn = 0;           // 上次钻石生成时间
         let isDead = false;                 // 玩家是否死亡
         let lastHealthPackSpawn = 0;        // 上次加血包生成时间
-        
-        // ==================== 支付设置数据 ====================
-        let paymentSettings = {
-            alipayQRCode: null,
-            wechatQRCode: null,
-            visaAccountName: '',
-            visaCardNumber: '',
-            mastercardAccountName: '',
-            mastercardCardNumber: ''
-        };
 
         // ==================== 绘制像素风热气球函数 ====================
         function drawStripedBalloon(graphics) {
