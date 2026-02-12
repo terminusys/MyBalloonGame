@@ -1004,8 +1004,8 @@
             coinLifeTime: 12000,        // 金币存在时间（毫秒）
             diamondSpawnInterval: 100000, // 钻石生成间隔（毫秒）100秒
             diamondSpawnCount: 5,       // 每次生成钻石数量
-            obstacleSpawnRate: 0.01,    // 障碍物生成概率
-            obstacleMaxCount: 5,        // 障碍物最大数量
+            obstacleSpawnRate: 0.003,   // 障碍物生成概率（降低到0.003，减少初始障碍物）
+            obstacleMaxCount: 3,        // 障碍物最大数量（降低到3个）
             healthPackInterval: 100000  // 加血包生成间隔（毫秒）
         };
         
@@ -1131,6 +1131,8 @@
         // 充值按钮
         document.getElementById('recharge-btn').addEventListener('click', function() {
             document.getElementById('recharge-modal').classList.add('show');
+            // 更新收款码显示
+            updateRechargeQRCodes();
         });
         
         // 取消充值
@@ -1659,6 +1661,10 @@
         // 玩家名字将在用户输入后设置
         console.log('🎈 玩家 ID:', playerId);
         
+        // ==================== 全局游戏数据 ====================
+        let gameDiamonds = 0;               // 钻石（游戏积分）
+        let totalCoinsCollected = 0;        // 累计收集的金币数
+        
         // 创建 Supabase 客户端（延迟初始化，避免重复声明）
         let supabaseClient = null;
         try {
@@ -1717,11 +1723,9 @@
         let playerHealth = 100;             // 玩家生命值
         let maxHealth = 100;                // 最大生命值
         let healthText;                     // 生命值显示文本
-        let gameDiamonds = 0;               // 钻石（游戏积分）
         let diamondsText;                   // 钻石显示文本
         let diamondItems = [];              // 钻石道具数组
         let lastDiamondSpawn = 0;           // 上次钻石生成时间
-        let totalCoinsCollected = 0;        // 累计收集的金币数
         let isDead = false;                 // 玩家是否死亡
         let lastHealthPackSpawn = 0;        // 上次加血包生成时间
         
