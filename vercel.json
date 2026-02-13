@@ -6,7 +6,7 @@
       "destination": "https://ksctfambipodjbrtjaby.supabase.co/rest/v1/:path*"
     },
     {
-      "source": "/auth/:path*",
+      "source": "/auth/v1/:path*",
       "destination": "https://ksctfambipodjbrtjaby.supabase.co/auth/v1/:path*"
     }
   ],
