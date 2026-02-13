@@ -90,9 +90,22 @@ END $$;
 -- 第四步：启用 Realtime
 -- ==========================================
 
--- 确保 Realtime 已启用
-ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS balloon_positions;
-ALTER PUBLICATION supabase_realtime ADD TABLE balloon_positions;
+-- 确保 Realtime 已启用（使用 DO 块安全处理）
+DO $$ 
+BEGIN
+    -- 尝试移除表（如果存在）
+    BEGIN
+        ALTER PUBLICATION supabase_realtime DROP TABLE balloon_positions;
+        RAISE NOTICE '✅ 已从 publication 中移除 balloon_positions';
+    EXCEPTION 
+        WHEN OTHERS THEN
+            RAISE NOTICE 'ℹ️ balloon_positions 不在 publication 中，继续';
+    END;
+    
+    -- 添加表到 publication
+    ALTER PUBLICATION supabase_realtime ADD TABLE balloon_positions;
+    RAISE NOTICE '✅ 已将 balloon_positions 添加到 Realtime';
+END $$;
 
 -- 第五步：确保 RLS 策略正确
 -- ==========================================
