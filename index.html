@@ -2331,8 +2331,13 @@ console.error('❌ 初始化失败', error);
         // 生成当前玩家的唯一ID
         const playerId = 'player_' + Math.random().toString(36).substr(2, 9);
         
+        // 生成随机气球颜色
+        const balloonColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+        const playerColor = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+        
         // 玩家名字将在用户输入后设置
         console.log('🎈 玩家 ID:', playerId);
+        console.log('🎨 玩家颜色:', playerColor);
 
         // ==================== 从 Supabase 加载全局配置 ====================
         async function loadGlobalSettings() {
@@ -2539,7 +2544,7 @@ console.error('❌ 初始化失败', error);
         let lastHealthPackSpawn = 0;        // 上次加血包生成时间
 
         // ==================== 绘制像素风热气球函数 ====================
-        function drawStripedBalloon(graphics) {
+        function drawStripedBalloon(graphics, primaryColorHex = null) {
             // 清空之前的绘制
             graphics.clear();
             
@@ -2548,14 +2553,18 @@ console.error('❌ 初始化失败', error);
             const balloonHeight = 65;
             const stripeCount = 8;  // 条纹数量
             
+            // 如果没有提供颜色，使用默认的红色
+            const primaryColor = primaryColorHex ? parseInt(primaryColorHex.replace('#', ''), 16) : 0xE63946;
+            const whiteColor = 0xF1FAEE;
+            
             // ---------- 绘制红白相间条纹的热气球球体 ----------
             for (let i = 0; i < stripeCount; i++) {
                 // 计算当前条纹的角度范围
                 const startAngle = (i * Math.PI) / stripeCount - Math.PI / 2;
                 const endAngle = ((i + 1) * Math.PI) / stripeCount - Math.PI / 2;
                 
-                // 交替使用红色和白色
-                const color = i % 2 === 0 ? 0xE63946 : 0xF1FAEE;
+                // 交替使用指定颜色和白色
+                const color = i % 2 === 0 ? primaryColor : whiteColor;
                 graphics.fillStyle(color, 1);
                 
                 // 绘制扇形条纹
@@ -3404,9 +3413,9 @@ console.error('❌ 初始化失败', error);
             // 创建容器
             const container = scene.add.container(data.x, data.y);
             
-            // 创建气球本体
+            // 创建气球本体（使用玩家的颜色）
             const body = scene.add.graphics();
-            drawStripedBalloon(body);
+            drawStripedBalloon(body, data.color || '#4ECDC4');  // 如果没有颜色，使用默认蓝色
             container.add(body);
             
             // 创建篮子
@@ -3760,6 +3769,7 @@ console.error('❌ 初始化失败', error);
                     player_name: playerName,
                     x: Math.round(x),
                     y: Math.round(y),
+                    color: playerColor,
                     updated_at: new Date().toISOString()
                 };
                 
@@ -3873,11 +3883,12 @@ console.error('❌ 初始化失败', error);
                 
                 // 如果是新玩家，创建气球
                 if (!otherPlayers[data.player_id]) {
-                    console.log('🎈 创建新玩家气球:', data.player_name);
+                    console.log('🎈 创建新玩家气球:', data.player_name, '颜色:', data.color);
                     otherPlayers[data.player_id] = createOtherPlayerBalloon(actualScene, {
                         x: data.x,
                         y: data.y,
-                        name: data.player_name
+                        name: data.player_name,
+                        color: data.color
                     });
                     console.log('✅ 新玩家加入成功:', data.player_name, '当前其他玩家数:', Object.keys(otherPlayers).length);
                 } else {
@@ -3936,11 +3947,12 @@ console.error('❌ 初始化失败', error);
                     
                     data.forEach(player => {
                         if (!otherPlayers[player.player_id]) {
-                            console.log('🎈 [LoadPlayers] 创建玩家气球:', player.player_name, 'at', player.x, player.y);
+                            console.log('🎈 [LoadPlayers] 创建玩家气球:', player.player_name, 'at', player.x, player.y, '颜色:', player.color);
                             otherPlayers[player.player_id] = createOtherPlayerBalloon(scene, {
                                 x: player.x,
                                 y: player.y,
-                                name: player.player_name
+                                name: player.player_name,
+                                color: player.color
                             });
                             otherPlayers[player.player_id].lastUpdate = Date.now();
                         } else {
