@@ -2,7 +2,7 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/db/:path*",
+      "source": "/rest/v1/:path*",
       "destination": "https://ksctfambipodjbrtjaby.supabase.co/rest/v1/:path*"
     },
     {
