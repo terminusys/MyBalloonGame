@@ -1227,20 +1227,22 @@
         // ==================== Supabase 配置 ====================
 // --- 联机分流手术开始 ---
 const SUPABASE_ORIGIN_URL = 'https://ksctfambipodjbrtjaby.supabase.co';
-const SUPABASE_TUNNEL_URL = window.location.origin;
-const SUPABASE_ANON_KEY = 'sb_publishable_8MsjbT3RenOKGNyMafKv-Q_b8MNN7Qn';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzY3RmYW1iaXBvZGpicnRqYWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyMDgzMzQsImV4cCI6MjA1Mjc4NDMzNH0.b0BN8INJznkBXn2-0_b08NT0rAsvnc=2_0';
 
 let supabaseClient = null;
 try {
-if (typeof window.supabase !== 'undefined') {
-// 关键点：我们在这里手动构建实时连接的 WSS 地址
-const customRealtimeUrl = 'wss://ksctfambipodjbrtjaby.supabase.co/realtime/v1';
-supabaseClient = window.supabase.createClient(SUPABASE_TUNNEL_URL, SUPABASE_ANON_KEY, {
-realtime: { url: customRealtimeUrl }
-});
- }   
+    if (typeof window.supabase !== 'undefined') {
+        // 直接使用 Supabase 原始 URL，不通过 Cloudflare 代理
+        // 这样 API 和 Realtime WebSocket 都会直连 Supabase
+        supabaseClient = window.supabase.createClient(SUPABASE_ORIGIN_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: false
+            }
+        });
+        console.log('✅ Supabase 已成功初始化');
+    }   
 } catch (error) {
-console.error('❌ 初始化失败', error);
+    console.error('❌ 初始化失败', error);
 }
 // --- 联机分流手术结束 ---
         // ==================== 游戏元素生成参数 ====================
