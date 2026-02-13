@@ -1,12 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/rest/v1/(.*)",
-      "destination": "https://ksctfambipodjbrtjaby.supabase.co/rest/v1/$1"
+      "source": "/rest/:path*",
+      "destination": "https://ksctfambipodjbrtjaby.supabase.co/rest/:path*"
     },
     {
-      "source": "/auth/v1/(.*)",
-      "destination": "https://ksctfambipodjbrtjaby.supabase.co/auth/v1/$1"
+      "source": "/auth/:path*",
+      "destination": "https://ksctfambipodjbrtjaby.supabase.co/auth/:path*"
     }
   ]
 }
