@@ -1226,7 +1226,7 @@
         
         // ==================== Supabase 配置 ====================
 // --- 联机分流手术开始 ---
-const SUPABASE_ORIGIN_URL = '';
+const SUPABASE_ORIGIN_URL = 'https://ksctfambipodjbrtjaby.supabase.co';
 const SUPABASE_TUNNEL_URL = window.location.origin;
 const SUPABASE_ANON_KEY = 'sb_publishable_8MsjbT3RenOKGNyMafKv-Q_b8MNN7Qn';
 
@@ -1235,7 +1235,10 @@ try {
 if (typeof window.supabase !== 'undefined') {
 // 关键点：我们在这里手动构建实时连接的 WSS 地址
 const customRealtimeUrl = 'wss://ksctfambipodjbrtjaby.supabase.co/realtime/v1';
-
+supabaseClient = window.supabase.createClient(SUPABASE_TUNNEL_URL, SUPABASE_ANON_KEY, {
+realtime: { url: customRealtimeUrl }
+});
+ }   
 } catch (error) {
 console.error('❌ 初始化失败', error);
 }
