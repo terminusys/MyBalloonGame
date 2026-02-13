@@ -1,23 +1,12 @@
 {
-  "version": 2,
   "rewrites": [
     {
-      "source": "/rest/v1/:path*",
-      "destination": "https://ksctfambipodjbrtjaby.supabase.co/rest/v1/:path*"
+      "source": "/rest/v1/(.*)",
+      "destination": "https://ksctfambipodjbrtjaby.supabase.co/rest/v1/$1"
     },
     {
-      "source": "/auth/v1/:path*",
-      "destination": "https://ksctfambipodjbrtjaby.supabase.co/auth/v1/:path*"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/auth/v1/(.*)",
+      "destination": "https://ksctfambipodjbrtjaby.supabase.co/auth/v1/$1"
     }
   ]
 }
