@@ -25,8 +25,21 @@ END $$;
 
 -- 第二步：移除并重新添加 balloon_positions 表到 Realtime
 -- ==========================================
-ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS balloon_positions;
-ALTER PUBLICATION supabase_realtime ADD TABLE balloon_positions;
+DO $$ 
+BEGIN
+    -- 尝试移除表（如果存在）
+    BEGIN
+        ALTER PUBLICATION supabase_realtime DROP TABLE balloon_positions;
+        RAISE NOTICE '✅ 已从 publication 中移除 balloon_positions';
+    EXCEPTION 
+        WHEN OTHERS THEN
+            RAISE NOTICE 'ℹ️ balloon_positions 不在 publication 中，继续';
+    END;
+    
+    -- 添加表到 publication
+    ALTER PUBLICATION supabase_realtime ADD TABLE balloon_positions;
+    RAISE NOTICE '✅ 已将 balloon_positions 添加到 Realtime';
+END $$;
 
 -- 第三步：验证 Realtime 是否已启用
 -- ==========================================
