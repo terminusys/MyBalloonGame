@@ -1,12 +1,14 @@
 {
+  "version": 2,
+  "public": true,
   "rewrites": [
     {
-      "source": "/rest/:path*",
-      "destination": "https://ksctfambipodjbrtjaby.supabase.co/rest/:path*"
+      "source": "/rest/(.*)",
+      "destination": "https://ksctfambipodjbrtjaby.supabase.co/rest/$1"
     },
     {
-      "source": "/auth/:path*",
-      "destination": "https://ksctfambipodjbrtjaby.supabase.co/auth/:path*"
+      "source": "/auth/(.*)",
+      "destination": "https://ksctfambipodjbrtjaby.supabase.co/auth/$1"
     }
   ]
 }
