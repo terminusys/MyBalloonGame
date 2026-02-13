@@ -1225,32 +1225,21 @@
         let isAdminLoggedIn = false;
         
         // ==================== Supabase 配置 ====================
-// ==================== Supabase 联机分流配置 ====================
-// 1. 原厂地址：用于实时联机（WSS）
+// --- 联机分流手术开始 ---
 const SUPABASE_ORIGIN_URL = '';
-
-// 2. 隧道地址：用于国内直连登录（HTTPS）
 const SUPABASE_TUNNEL_URL = window.location.origin;
-
 const SUPABASE_ANON_KEY = 'sb_publishable_8MsjbT3RenOKGNyMafKv-Q_b8MNN7Qn';
 
 let supabaseClient = null;
 try {
 if (typeof window.supabase !== 'undefined') {
-// 【核心分流逻辑】
-supabaseClient = window.supabase.createClient(SUPABASE_TUNNEL_URL, SUPABASE_ANON_KEY, {
-realtime: {
-// 强制联机信号绕过隧道，直接连向美国原厂服务器
-url: SUPABASE_ORIGIN_URL.replace('https://', 'wss://') + '/realtime/v1'
-}
-});
-console.log('✅ Supabase 客户端分流初始化成功');
-} else {
-console.error('❌ Supabase 库未加载！');
-}
+// 关键点：我们在这里手动构建实时连接的 WSS 地址
+const customRealtimeUrl = 'wss://ksctfambipodjbrtjaby.supabase.co/realtime/v1';
+
 } catch (error) {
-console.error('❌ Supabase 初始化失败:', error);
+console.error('❌ 初始化失败', error);
 }
+// --- 联机分流手术结束 ---
         // ==================== 游戏元素生成参数 ====================
         let gameSettings = {
             coinSpawnRate: 0.02,        // 金币生成概率（每帧）
