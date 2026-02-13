@@ -1,9 +1,12 @@
 {
-  "version": 2,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
+      "source": "/db/:path*",
+      "destination": "https://ksctfambipodjbrtjaby.supabase.co/rest/v1/:path*"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "https://ksctfambipodjbrtjaby.supabase.co/auth/v1/:path*"
     }
   ]
 }
