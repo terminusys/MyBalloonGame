@@ -12,7 +12,8 @@
 -- 第一步：添加缺失的字段
 -- ==========================================
 
--- 添加 id 主键字段（如果不存在）
+-- 添加 id 字段（如果不存在）
+-- 注意：如果表已有主键（如 player_id），则只添加 id 作为普通 UUID 字段
 DO $$ 
 BEGIN
     -- 检查是否已有 id 列
@@ -21,10 +22,11 @@ BEGIN
         WHERE table_name = 'balloon_positions' AND column_name = 'id'
     ) THEN
         -- 添加 id 列，使用 UUID 并设置默认值
+        -- 如果表已有主键，这里不会设为主键，只是一个唯一标识字段
         ALTER TABLE balloon_positions 
-        ADD COLUMN id uuid DEFAULT gen_random_uuid() PRIMARY KEY;
+        ADD COLUMN id uuid DEFAULT gen_random_uuid() UNIQUE;
         
-        RAISE NOTICE '✅ 已添加 id 主键字段';
+        RAISE NOTICE '✅ 已添加 id 字段（UUID）';
     ELSE
         RAISE NOTICE 'ℹ️ id 字段已存在，跳过';
     END IF;
