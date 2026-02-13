@@ -1225,8 +1225,14 @@
         let isAdminLoggedIn = false;
         
         // ==================== Supabase 配置 ====================
-        const SUPABASE_URL = 'https://ksctfambipodjbrtjaby.supabase.co';
+        // --- 替换开始 ---
+        const SUPABASE_URL = (function() {
+            // 动态获取当前域名，强制走 Vercel 的中转逻辑
+            return window.location.origin; 
+        })();
+
         const SUPABASE_ANON_KEY = 'sb_publishable_8MsjbT3RenOKGNyMafKv-Q_b8MNN7Qn';
+        // --- 替换结束 ---
         
         // 初始化 Supabase 客户端
         let supabaseClient = null;
