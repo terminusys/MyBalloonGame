@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "rewrites": [
     {
       "source": "/db/:path*",
@@ -7,6 +8,16 @@
     {
       "source": "/auth/:path*",
       "destination": "https://ksctfambipodjbrtjaby.supabase.co/auth/v1/:path*"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
     }
   ]
 }
